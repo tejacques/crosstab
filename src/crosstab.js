@@ -86,7 +86,7 @@ var crosstab = (function () {
 
         var removeListener = function (event, key) {
             if (events[event] && events[event][key]) {
-                delete eventListeners[event][key];
+                delete events[event][key];
                 return true;
             }
             return false;
@@ -121,7 +121,7 @@ var crosstab = (function () {
             }
 
             addListener(event, function () {
-                removeListener(key);
+                removeListener(event, key);
                 var args = Array.prototype.slice.call(arguments);
                 listener.apply(this, args);
             }, key);
@@ -162,13 +162,15 @@ var crosstab = (function () {
 
     function onStorageEvent(event) {
         var eventValue = event.newValue ? JSON.parse(event.newValue) : {};
-        if (eventValue.id === crosstab.id) {
+        if (event.key !== GLOBAL_LOCK && !eventValue.id || eventValue.id === crosstab.id) {
             // This is to force IE to behave properly
             return;
         }
         switch (event.key) {
             case GLOBAL_LOCK:
                 if (event.newValue === null) {
+                    console.log("GLOBAL LOCK CLEARED");
+                    console.log(event);
                     eventHandler.emit(util.eventTypes.unlocked);
                 }
                 break;
@@ -182,10 +184,8 @@ var crosstab = (function () {
                 break;
             case MESSAGE_KEY:
                 var message = eventValue.data;
-                console.log("MESSAGE_KEY RECEIVED: ", message);
                 // only handle if this message was meant for this tab.
                 if (!message.destination || message.destination === crosstab.id) {
-                    console.log("====== EMITTING MESSAGE ==========");
                     eventHandler.emit(message.event, message);
                 }
                 break;
@@ -230,17 +230,15 @@ var crosstab = (function () {
     // Handle other tabs closing by updating internal tab model, and promoting
     // self if we are the lowest tab id
     eventHandler.addListener(util.eventTypes.tabClosed, function (id) {
-        console.log("tab: ", id, " was closed");
+        console.log("TTTTTTTTTTTTTT tab closed");
+        var start = (new Date()).getTime();
         // all functions that modify tabs must be done within a lock
         util.lock(function () {
+            var now = (new Date()).getTime();
+            console.log("TTTTTTTTTTTTTT tabs closed locked in ", (now - start), " ms");
             if (util.tabs[id]) {
                 delete util.tabs[id];
             }
-
-            console.log("mytab.id: ", crosstab.id, " typeof(mytab.id): ", typeof (crosstab.id));
-            console.log("closedtab.id: ", id, " typeof(closedtab.id): ", typeof (id));
-            console.log("mastertab.id: ", util.tabs[MASTER_TAB].id, " typeof(mastertab.id): ", typeof (util.tabs[MASTER_TAB].id));
-            
 
             if (util.tabs[MASTER_TAB].id === id) {
                 // If the master was the closed tab, delete it and the highest
@@ -254,17 +252,8 @@ var crosstab = (function () {
                     }
                 });
 
-                console.log("typeof (maxId): ", typeof (maxId));
-                console.log("typeof (crosstab.id): ", typeof (crosstab.id));
-                console.log("new master is: ", maxId);
-                console.log("I am: ", crosstab.id);
-                console.log("Am I new master: ", (maxId === crosstab.id));
-
                 if (maxId === crosstab.id) {
-                    console.log("I will become master now");
                     eventHandler.emit(util.eventTypes.becomeMaster, crosstab.id);
-                } else {
-                    console.log(maxId, " will become master now");
                 }
             } else if (util.tabs[MASTER_TAB].id === crosstab.id) {
                 // If I am master, save the new tabs out
@@ -274,20 +263,23 @@ var crosstab = (function () {
     });
 
     eventHandler.addListener(util.eventTypes.tabsUpdated, function (tabs) {
+        var start = (new Date()).getTime();
+        console.log("UUUUUUUUUUUUUU tabs updated");
+        console.log(tabs);
         // all functions that modify tabs must be done withing a lock
         util.lock(function () {
+            var now = (new Date()).getTime();
+            console.log("UUUUUUUUUUUUUU tabs updated locked in ", (now-start), " ms");
             util.tabs = tabs;
         });
     });
 
     eventHandler.addListener(util.eventTypes.becomeMaster, function (id) {
-        console.log("become master");
         util.lock(function () {
             util.tabs[MASTER_TAB] = {
                 id: id,
                 lastUpdated: (new Date()).getTime()
             };
-            console.log("------- Become master setting tab values in local storage");
             setStoredTabs();
         });
     });
@@ -317,6 +309,8 @@ var crosstab = (function () {
         // re-trying to lock based on the RETRY time
         var lockTimers = [];
 
+        var start = (new Date()).getTime();
+
         function lock() {
             // only execute the function once. This if block can happen
             // if multiple events fire off before they are cleared
@@ -324,9 +318,11 @@ var crosstab = (function () {
                 return;
             }
 
+            var now = (new Date()).getTime();
+
             if (!iHaveTheLock) {
-                var now = (new Date()).getTime();
                 var lockActive = now - (getLocalStorageItem(GLOBAL_LOCK) || 0) < EXPIRED;
+                console.log("Lock Active? ", lockActive);
 
                 // if another tab has the lock, and it hasn't expired
                 // we'll wait until it's available by listening for
@@ -336,21 +332,27 @@ var crosstab = (function () {
                         storageListener = eventHandler.once(
                             util.eventTypes.unlocked,
                             function () {
-                                console.log("+++++++++++++ lock from storageListener");
+                                console.log("++++++++ STORAGE LISTENER LOCK AGAIN +++++++");
+                                storageListener = null;
                                 lock();
                             },
                             id);
                     }
 
                     lockTimers.push(window.setTimeout(function () {
-                        console.log("================ lock from window.setTimeout");
+                        console.log("++++++++ LOCKTIMER LOCK AGAIN +++++++");
                         lock();
                     }, RETRY));
                     return;
                 }
             }
 
+            if (!iHaveTheLock) {
+                console.log("lock acquired in ", (now-start), " ms");
+            }
             iHaveTheLock++;
+            executedFunction = true;
+            setLocalStorageItem(GLOBAL_LOCK, now);
 
             // try/finally block to ensure that we unlock
             try {
@@ -382,7 +384,10 @@ var crosstab = (function () {
             }
 
             // clean up the local storage lock
-            localStorage.removeItem(GLOBAL_LOCK);
+            if (!iHaveTheLock) {
+                console.log("lock released");
+                localStorage.removeItem(GLOBAL_LOCK);
+            }
         }
 
         lock();
@@ -418,7 +423,7 @@ var crosstab = (function () {
     // ---- Return ----
     var crosstab = {
         id: util.generateId(),
-        supported: !!localStorage,
+        supported: !!localStorage && window.addEventListener,
         util: util,
         broadcast: broadcast,
         broadcastMaster: broadcastMaster
@@ -436,7 +441,6 @@ var crosstab = (function () {
     }
 
     function setStoredTabs() {
-        console.log("Setting Stored Tabs: ", util.tabs);
         setLocalStorageItem(TABS_KEY, util.tabs);
     }
 
@@ -461,12 +465,7 @@ var crosstab = (function () {
             }
 
             util.tabs = util.filter(util.tabs, function (tab) {
-                if (now - tab.lastUpdated < TAB_TIMEOUT) {
-                    return true;
-                } else {
-                    console.log("removing tab: ", tab);
-                    return false;
-                }
+                return now - tab.lastUpdated < TAB_TIMEOUT;
             });
 
             if (masterExpired && !iAmMaster) {
@@ -474,8 +473,6 @@ var crosstab = (function () {
                 // to below.
                 eventHandler.emit(util.eventTypes.becomeMaster, crosstab.id);
             } else {
-                //console.log("---- SETTING TABS FROM KEEPALIVE");
-                //console.log(JSON.stringify(util.tabs));
                 setStoredTabs();
                 eventHandler.emit(util.eventTypes.tabsUpdated, util.tabs);
             }
@@ -492,21 +489,8 @@ var crosstab = (function () {
         crosstab.broadcast = notSupported;
     } else {
         // ---- Setup Storage Listener
-        if (window.addEventListener) {
-            window.addEventListener('storage', onStorageEvent, false);
-            window.addEventListener('beforeunload', beforeUnload, false);
-        } else if (document.attachEvent) {
-            console.log("IE8: using document.attachEvent instead");
-            //document.attachEvent('onstorage', onStorageEvent);
-            document.attachEvent('onstorage', function (event) {
-                onStorageEvent(event);
-                console.log("Received event: ", event);
-            });
-            //document.attachEvent('onbeforeunload', beforeUnload);
-            document.attachEvent('onbeforeunload', function () {
-                beforeUnload();
-            });
-        }
+        window.addEventListener('storage', onStorageEvent, false);
+        window.addEventListener('beforeunload', beforeUnload, false);
 
         keepalive();
     }

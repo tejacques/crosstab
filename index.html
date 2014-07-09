@@ -95,19 +95,26 @@
                 }
             };
 
+            function udt() {
+                setTimeout(function() {
+                    crosstab.util.lock(function () {
+                        console.log("udt");
+                        $scope.updateTabs();
+                        $scope.$apply();
+                    });
+                }, 0);
+            }
+
             crosstab.util.events.on('tabsUpdated', function () {
-                $scope.updateTabs();
-                $scope.$apply();
+                udt();
             });
 
             crosstab.util.events.on('tabClosed', function () {
-                $scope.updateTabs();
-                $scope.$apply();
+                udt();
             });
 
             crosstab.util.events.on('becomeMaster', function () {
-                $scope.updateTabs();
-                $scope.$apply();
+                udt();
             });
 
             crosstab.util.events.on('message', function (message) {
