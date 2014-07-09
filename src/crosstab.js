@@ -169,8 +169,6 @@ var crosstab = (function () {
         switch (event.key) {
             case GLOBAL_LOCK:
                 if (event.newValue === null) {
-                    console.log("GLOBAL LOCK CLEARED");
-                    console.log(event);
                     eventHandler.emit(util.eventTypes.unlocked);
                 }
                 break;
@@ -230,12 +228,10 @@ var crosstab = (function () {
     // Handle other tabs closing by updating internal tab model, and promoting
     // self if we are the lowest tab id
     eventHandler.addListener(util.eventTypes.tabClosed, function (id) {
-        console.log("TTTTTTTTTTTTTT tab closed");
         var start = (new Date()).getTime();
         // all functions that modify tabs must be done within a lock
         util.lock(function () {
             var now = (new Date()).getTime();
-            console.log("TTTTTTTTTTTTTT tabs closed locked in ", (now - start), " ms");
             if (util.tabs[id]) {
                 delete util.tabs[id];
             }
@@ -264,12 +260,9 @@ var crosstab = (function () {
 
     eventHandler.addListener(util.eventTypes.tabsUpdated, function (tabs) {
         var start = (new Date()).getTime();
-        console.log("UUUUUUUUUUUUUU tabs updated");
-        console.log(tabs);
         // all functions that modify tabs must be done withing a lock
         util.lock(function () {
             var now = (new Date()).getTime();
-            console.log("UUUUUUUUUUUUUU tabs updated locked in ", (now-start), " ms");
             util.tabs = tabs;
         });
     });
@@ -322,7 +315,6 @@ var crosstab = (function () {
 
             if (!iHaveTheLock) {
                 var lockActive = now - (getLocalStorageItem(GLOBAL_LOCK) || 0) < EXPIRED;
-                console.log("Lock Active? ", lockActive);
 
                 // if another tab has the lock, and it hasn't expired
                 // we'll wait until it's available by listening for
@@ -332,7 +324,6 @@ var crosstab = (function () {
                         storageListener = eventHandler.once(
                             util.eventTypes.unlocked,
                             function () {
-                                console.log("++++++++ STORAGE LISTENER LOCK AGAIN +++++++");
                                 storageListener = null;
                                 lock();
                             },
@@ -340,7 +331,6 @@ var crosstab = (function () {
                     }
 
                     lockTimers.push(window.setTimeout(function () {
-                        console.log("++++++++ LOCKTIMER LOCK AGAIN +++++++");
                         lock();
                     }, RETRY));
                     return;
