@@ -14,10 +14,9 @@ var crosstab = (function () {
 
     util.forEachObj = function (thing, fn) {
         for (var key in thing) {
-            if (!thing.hasOwnProperty(key)) {
-                continue;
+            if (thing.hasOwnProperty(key)) {
+                fn.call(thing, thing[key], key);
             }
-            fn.call(thing, thing[key], key);
         }
     };
 
@@ -58,6 +57,10 @@ var crosstab = (function () {
         });
 
         return res;
+    };
+
+    util.now = function () {
+        return (new Date()).getTime();
     };
 
     util.tabs = {};
@@ -200,13 +203,17 @@ var crosstab = (function () {
     }
 
     function getLocalStorageItem(key) {
-        var json = localStorage.getItem(key);
-        var item = json ? JSON.parse(json) : {};
+        var item = getLocalStorageRaw(key);
         return item.data;
     }
 
-    function beforeUnload(event) {
-        //var c = confirm("Sure?");
+    function getLocalStorageRaw(key) {
+        var json = localStorage.getItem(key);
+        var item = json ? JSON.parse(json) : {};
+        return item;
+    }
+
+    function beforeUnload() {
         var numTabs = 0;
         util.forEach(util.tabs, function (tab, key) {
             if (key !== MASTER_TAB) {
@@ -215,10 +222,8 @@ var crosstab = (function () {
         });
 
         if (numTabs === 1) {
-            util.lock(function () {
-                util.tabs = {};
-                setStoredTabs();
-            });
+            util.tabs = {};
+            setStoredTabs();
         } else {
             // lockless because we want to make sure it always happens
             setLocalStorageItem(TAB_CLOSED_KEY, crosstab.id);
@@ -228,10 +233,8 @@ var crosstab = (function () {
     // Handle other tabs closing by updating internal tab model, and promoting
     // self if we are the lowest tab id
     eventHandler.addListener(util.eventTypes.tabClosed, function (id) {
-        var start = (new Date()).getTime();
         // all functions that modify tabs must be done within a lock
         util.lock(function () {
-            var now = (new Date()).getTime();
             if (util.tabs[id]) {
                 delete util.tabs[id];
             }
@@ -259,10 +262,8 @@ var crosstab = (function () {
     });
 
     eventHandler.addListener(util.eventTypes.tabsUpdated, function (tabs) {
-        var start = (new Date()).getTime();
         // all functions that modify tabs must be done withing a lock
         util.lock(function () {
-            var now = (new Date()).getTime();
             util.tabs = tabs;
         });
     });
@@ -271,13 +272,14 @@ var crosstab = (function () {
         util.lock(function () {
             util.tabs[MASTER_TAB] = {
                 id: id,
-                lastUpdated: (new Date()).getTime()
+                lastUpdated: util.now()
             };
             setStoredTabs();
         });
     });
 
     util.generateId = function () {
+        /*jshint bitwise: false*/
         return (Math.random() * 0x7FFFFFFF) | 0;
     };
 
@@ -290,8 +292,6 @@ var crosstab = (function () {
         var EXPIRED = 5 * 1000;
         // 10 ms retry time
         var RETRY = 10;
-        // self reference
-        var self = this;
 
         // only run the function once
         var executedFunction = false;
@@ -302,7 +302,23 @@ var crosstab = (function () {
         // re-trying to lock based on the RETRY time
         var lockTimers = [];
 
-        var start = (new Date()).getTime();
+        var start = util.now();
+
+        function retryLock() {
+            if (!storageListener) {
+                storageListener = eventHandler.once(
+                    util.eventTypes.unlocked,
+                    function () {
+                        storageListener = null;
+                        lock();
+                    },
+                    id);
+            }
+
+            lockTimers.push(window.setTimeout(function () {
+                lock();
+            }, RETRY));
+        }
 
         function lock() {
             // only execute the function once. This if block can happen
@@ -311,28 +327,30 @@ var crosstab = (function () {
                 return;
             }
 
-            var now = (new Date()).getTime();
+            var now = util.now();
 
             if (!iHaveTheLock) {
-                var lockActive = now - (getLocalStorageItem(GLOBAL_LOCK) || 0) < EXPIRED;
+                var rawLock = getLocalStorageRaw(GLOBAL_LOCK);
+                var lockActive;
+
+                if (rawLock.id && rawLock.id !== crosstab.id) {
+                    // retry later
+                    window.setTimeout(lock, 0);
+                }
+
+                lockActive = now - (rawLock.data || 0) < EXPIRED;
 
                 // if another tab has the lock, and it hasn't expired
                 // we'll wait until it's available by listening for
                 // storage changes and retrying every RETY interval
-                if (lockActive) {
-                    if (!storageListener) {
-                        storageListener = eventHandler.once(
-                            util.eventTypes.unlocked,
-                            function () {
-                                storageListener = null;
-                                lock();
-                            },
-                            id);
-                    }
+                if (!lockActive) {
+                    setLocalStorageItem(GLOBAL_LOCK, now);
+                    
+                    lockActive = rawLock.id !== crosstab.id;
+                }
 
-                    lockTimers.push(window.setTimeout(function () {
-                        lock();
-                    }, RETRY));
+                if (lockActive) {
+                    retryLock();
                     return;
                 }
             }
@@ -385,20 +403,18 @@ var crosstab = (function () {
 
     // --- Setup message sending and handling ---
     function broadcast(event, data, destination) {
-        message = {
+        var message = {
             event: event,
             data: data,
             destination: destination,
             origin: crosstab.id,
-            timestamp: (new Date()).getTime()
+            timestamp: util.now()
         };
 
         // If the destination differs from the origin send it out, otherwise
         // handle it locally
         if (message.destination !== message.origin) {
-            util.lock(function () {
-                setLocalStorageItem(MESSAGE_KEY, message);
-            });
+            setLocalStorageItem(MESSAGE_KEY, message);
         }
 
         if (!message.destination || message.destination === message.origin) {
@@ -437,7 +453,7 @@ var crosstab = (function () {
     function keepalive() {
         util.lock(function () {
             getStoredTabs();
-            var now = (new Date()).getTime();
+            var now = util.now();
 
             var myTab = {
                 id: crosstab.id,
