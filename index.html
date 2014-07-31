@@ -97,23 +97,21 @@
 
             function udt() {
                 setTimeout(function() {
-                    crosstab.util.lock(function () {
-                        console.log("udt");
-                        $scope.updateTabs();
-                        $scope.$apply();
-                    });
+                    console.log("udt");
+                    $scope.updateTabs();
+                    $scope.$apply();
                 }, 0);
             }
 
-            crosstab.util.events.on('tabsUpdated', function () {
+            crosstab.util.events.on(crosstab.util.eventTypes.tabUpdated, function () {
                 udt();
             });
 
-            crosstab.util.events.on('tabClosed', function () {
+            crosstab.util.events.on(crosstab.util.eventTypes.tabClosed, function () {
                 udt();
             });
 
-            crosstab.util.events.on('becomeMaster', function () {
+            crosstab.util.events.on(crosstab.util.eventTypes.tabPromoted, function () {
                 udt();
             });
 

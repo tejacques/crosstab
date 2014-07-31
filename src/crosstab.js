@@ -5,10 +5,8 @@ var crosstab = (function () {
     }
 
     // --- Utility ---
-    var GLOBAL_LOCK = 'crosstab.GLOBAL_LOCK';
     var MESSAGE_KEY = 'crosstab.MESSAGE_KEY';
     var TABS_KEY = 'crosstab.TABS_KEY';
-    var TAB_CLOSED_KEY = 'crosstab.TAB_CLOSED';
     var MASTER_TAB = 'MASTER_TAB';
     var util = {};
 
@@ -63,13 +61,13 @@ var crosstab = (function () {
         return (new Date()).getTime();
     };
 
-    util.tabs = {};
+    util.tabs = getStoredTabs();
 
     util.eventTypes = {
         becomeMaster: 'becomeMaster',
-        tabsUpdated: 'tabsUpdated',
+        tabUpdated: 'tabUpdated',
         tabClosed: 'tabClosed',
-        unlocked: 'unlocked'
+        tabPromoted: 'tabPromoted'
     };
 
     // --- Events ---
@@ -165,31 +163,16 @@ var crosstab = (function () {
 
     function onStorageEvent(event) {
         var eventValue = event.newValue ? JSON.parse(event.newValue) : {};
-        if (event.key !== GLOBAL_LOCK && !eventValue.id || eventValue.id === crosstab.id) {
+        if (!eventValue.id || eventValue.id === crosstab.id) {
             // This is to force IE to behave properly
             return;
         }
-        switch (event.key) {
-            case GLOBAL_LOCK:
-                if (event.newValue === null) {
-                    eventHandler.emit(util.eventTypes.unlocked);
-                }
-                break;
-            case TABS_KEY:
-                var tabs = eventValue.data;
-                eventHandler.emit(util.eventTypes.tabsUpdated, tabs);
-                break;
-            case TAB_CLOSED_KEY:
-                var id = eventValue.data;
-                eventHandler.emit(util.eventTypes.tabClosed, id);
-                break;
-            case MESSAGE_KEY:
-                var message = eventValue.data;
-                // only handle if this message was meant for this tab.
-                if (!message.destination || message.destination === crosstab.id) {
-                    eventHandler.emit(message.event, message);
-                }
-                break;
+        if (event.key === MESSAGE_KEY) {
+            var message = eventValue.data;
+            // only handle if this message was meant for this tab.
+            if (!message.destination || message.destination === crosstab.id) {
+                eventHandler.emit(message.event, message);
+            }
         }
     }
 
@@ -225,180 +208,83 @@ var crosstab = (function () {
             util.tabs = {};
             setStoredTabs();
         } else {
-            // lockless because we want to make sure it always happens
-            setLocalStorageItem(TAB_CLOSED_KEY, crosstab.id);
+            broadcast(util.eventTypes.tabClosed, crosstab.id);
         }
     }
 
     // Handle other tabs closing by updating internal tab model, and promoting
     // self if we are the lowest tab id
-    eventHandler.addListener(util.eventTypes.tabClosed, function (id) {
-        // all functions that modify tabs must be done within a lock
-        util.lock(function () {
-            if (util.tabs[id]) {
-                delete util.tabs[id];
-            }
+    eventHandler.addListener(util.eventTypes.tabClosed, function (message) {
+        var id = message.data;
+        if (util.tabs[id]) {
+            delete util.tabs[id];
+        }
 
-            if (util.tabs[MASTER_TAB].id === id) {
-                // If the master was the closed tab, delete it and the highest
-                // tab ID becomes the new master, which will save the tabs
-                delete util.tabs[MASTER_TAB];
+        if (util.tabs[MASTER_TAB].id === id) {
+            // If the master was the closed tab, delete it and the highest
+            // tab ID becomes the new master, which will save the tabs
+            delete util.tabs[MASTER_TAB];
 
-                var maxId = -1;
-                util.forEach(util.tabs, function (tab) {
-                    if (tab.id > maxId) {
-                        maxId = tab.id;
-                    }
-                });
-
-                if (maxId === crosstab.id) {
-                    eventHandler.emit(util.eventTypes.becomeMaster, crosstab.id);
+            var maxId = -1;
+            util.forEach(util.tabs, function (tab) {
+                if (tab.id > maxId) {
+                    maxId = tab.id;
                 }
-            } else if (util.tabs[MASTER_TAB].id === crosstab.id) {
-                // If I am master, save the new tabs out
-                setStoredTabs();
+            });
+
+            // only broadcast the promotion if I am the new master
+            if (maxId === crosstab.id) {
+                broadcast(util.eventTypes.tabPromoted, crosstab.id);
             }
-        });
-    });
-
-    eventHandler.addListener(util.eventTypes.tabsUpdated, function (tabs) {
-        // all functions that modify tabs must be done withing a lock
-        util.lock(function () {
-            util.tabs = tabs;
-        });
-    });
-
-    eventHandler.addListener(util.eventTypes.becomeMaster, function (id) {
-        util.lock(function () {
-            util.tabs[MASTER_TAB] = {
-                id: id,
-                lastUpdated: util.now()
-            };
+        } else if (util.tabs[MASTER_TAB].id === crosstab.id) {
+            // If I am master, save the new tabs out
             setStoredTabs();
-        });
+        }
     });
+
+    eventHandler.addListener(util.eventTypes.tabUpdated, function (message) {
+        var tab = message.data;
+        util.tabs[tab.id] = tab;
+        if (util.tabs[MASTER_TAB].id === tab.id) {
+            util.tabs[MASTER_TAB] = tab;
+        }
+        if (util.tabs[MASTER_TAB].id === crosstab.id) {
+            // If I am master, save the new tabs out
+            setStoredTabs();
+        }
+    });
+
+    eventHandler.addListener(util.eventTypes.tabPromoted, function (message) {
+        var id = message.data;
+        var lastUpdated = message.timestamp;
+        util.tabs[MASTER_TAB] = {
+            id: id,
+            lastUpdated: lastUpdated
+        };
+
+        if (crosstab.id === id) {
+            // set the tabs in localStorage
+            setStoredTabs();
+
+            // emit the become master event so we can handle it accordingly
+            util.events.emit(util.eventTypes.becomeMaster);
+        }
+    });
+
+    function pad(num, width, padChar) {
+        padChar = padChar || '0';
+        var numStr = (num + '');
+
+        if (numStr.length >= width) {
+            return numStr;
+        }
+
+        return new Array(width - numStr.length + 1).join(padChar) + numStr;
+    }
 
     util.generateId = function () {
         /*jshint bitwise: false*/
-        return (Math.random() * 0x7FFFFFFF) | 0;
-    };
-
-    // --- Setup locking ---
-    var iHaveTheLock = 0;
-    util.lock = function (fn, cb) {
-        // unique id for this transaction
-        var id = util.generateId();
-        // 5 seconds max lock time.
-        var EXPIRED = 5 * 1000;
-        // 10 ms retry time
-        var RETRY = 10;
-
-        // only run the function once
-        var executedFunction = false;
-
-        // listening for local storage changes to re-try locking
-        var storageListener = 0;
-
-        // re-trying to lock based on the RETRY time
-        var lockTimers = [];
-
-        var start = util.now();
-
-        function retryLock() {
-            if (!storageListener) {
-                storageListener = eventHandler.once(
-                    util.eventTypes.unlocked,
-                    function () {
-                        storageListener = null;
-                        lock();
-                    },
-                    id);
-            }
-
-            lockTimers.push(window.setTimeout(function () {
-                lock();
-            }, RETRY));
-        }
-
-        function lock() {
-            // only execute the function once. This if block can happen
-            // if multiple events fire off before they are cleared
-            if (executedFunction) {
-                return;
-            }
-
-            var now = util.now();
-
-            if (!iHaveTheLock) {
-                var rawLock = getLocalStorageRaw(GLOBAL_LOCK);
-                var lockActive;
-
-                if (rawLock.id && rawLock.id !== crosstab.id) {
-                    // retry later
-                    window.setTimeout(lock, 0);
-                }
-
-                lockActive = now - (rawLock.data || 0) < EXPIRED;
-
-                // if another tab has the lock, and it hasn't expired
-                // we'll wait until it's available by listening for
-                // storage changes and retrying every RETY interval
-                if (!lockActive) {
-                    setLocalStorageItem(GLOBAL_LOCK, now);
-                    
-                    lockActive = rawLock.id !== crosstab.id;
-                }
-
-                if (lockActive) {
-                    retryLock();
-                    return;
-                }
-            }
-
-            if (!iHaveTheLock) {
-                console.log("lock acquired in ", (now-start), " ms");
-            }
-            iHaveTheLock++;
-            executedFunction = true;
-            setLocalStorageItem(GLOBAL_LOCK, now);
-
-            // try/finally block to ensure that we unlock
-            try {
-                if (typeof (fn) === 'function') {
-                    fn();
-                }
-            }
-            finally {
-                unlock();
-                if (typeof (cb) === 'function') {
-                    cb();
-                }
-            }
-        }
-
-        function unlock() {
-            iHaveTheLock--;
-
-            // clean up the storage listener if there was one
-            if (storageListener) {
-                eventHandler.removeListener(util.eventTypes.unlocked, id);
-            }
-
-            // clean up all of the lock timers if there were any
-            if (lockTimers.length) {
-                for (var i = 0; i < lockTimers.length; i++) {
-                    window.clearTimeout(lockTimers[i]);
-                }
-            }
-
-            // clean up the local storage lock
-            if (!iHaveTheLock) {
-                console.log("lock released");
-                localStorage.removeItem(GLOBAL_LOCK);
-            }
-        }
-
-        lock();
+        return util.now() + '' + pad((Math.random() * 0x7FFFFFFF) | 0, 10);
     };
 
     // --- Setup message sending and handling ---
@@ -442,7 +328,7 @@ var crosstab = (function () {
 
     function getStoredTabs() {
         var storedTabs = getLocalStorageItem(TABS_KEY);
-        util.tabs = storedTabs || util.tabs;
+        util.tabs = storedTabs || util.tabs || {};
         return util.tabs;
     }
 
@@ -451,54 +337,52 @@ var crosstab = (function () {
     }
 
     function keepalive() {
-        util.lock(function () {
-            getStoredTabs();
-            var now = util.now();
+        var now = util.now();
 
-            var myTab = {
-                id: crosstab.id,
-                lastUpdated: now
-            };
+        var myTab = {
+            id: crosstab.id,
+            lastUpdated: now
+        };
 
-            // Set my tab
-            util.tabs[crosstab.id] = myTab;
-            // Set master tab if it has expired
-            util.tabs[MASTER_TAB] = util.tabs[MASTER_TAB] || { lastUpdated: 0 };
-            var masterExpired = now - util.tabs[MASTER_TAB].lastUpdated > TAB_TIMEOUT;
-            var iAmMaster = util.tabs[MASTER_TAB].id === myTab.id;
-            if (masterExpired || iAmMaster) {
-                util.tabs[MASTER_TAB] = myTab;
-            }
+        // Set my tab
+        util.tabs[crosstab.id] = myTab;
+        // Set master tab if it has expired
+        util.tabs[MASTER_TAB] = util.tabs[MASTER_TAB] || { lastUpdated: 0 };
+        var masterExpired = now - util.tabs[MASTER_TAB].lastUpdated > TAB_TIMEOUT;
+        var iAmMaster = util.tabs[MASTER_TAB].id === myTab.id;
+        if (masterExpired || iAmMaster) {
+            util.tabs[MASTER_TAB] = myTab;
+        }
 
-            util.tabs = util.filter(util.tabs, function (tab) {
-                return now - tab.lastUpdated < TAB_TIMEOUT;
-            });
-
-            if (masterExpired && !iAmMaster) {
-                // become master -- this will update tabs so we don't need
-                // to below.
-                eventHandler.emit(util.eventTypes.becomeMaster, crosstab.id);
-            } else {
-                setStoredTabs();
-                eventHandler.emit(util.eventTypes.tabsUpdated, util.tabs);
-            }
+        util.tabs = util.filter(util.tabs, function (tab) {
+            return now - tab.lastUpdated < TAB_TIMEOUT;
         });
 
+        if (masterExpired && !iAmMaster) {
+            // notify other tabs of promotion to master
+            broadcast(util.eventTypes.tabPromoted, crosstab.id);
+        }
+
+        // broadcast tabUpdated event
+        broadcast(util.eventTypes.tabUpdated, myTab);
+    }
+
+    function keepaliveLoop() {
         if (!crosstab.stopKeepalive) {
-            window.setTimeout(keepalive, TAB_KEEPALIVE);
+            keepalive();
+            window.setTimeout(keepaliveLoop, TAB_KEEPALIVE);
         }
     }
 
     // --- Check if localStorage is supported ---
     if (!crosstab.supported) {
-        util.lock = notSupported;
         crosstab.broadcast = notSupported;
     } else {
         // ---- Setup Storage Listener
         window.addEventListener('storage', onStorageEvent, false);
         window.addEventListener('beforeunload', beforeUnload, false);
 
-        keepalive();
+        keepaliveLoop();
     }
 
     return crosstab;
