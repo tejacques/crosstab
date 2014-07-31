@@ -217,6 +217,28 @@ var crosstab = (function () {
         }
     }
 
+    function masterTabElection() {
+        var maxId = null;
+        util.forEach(util.tabs, function (tab) {
+            if (!maxId || tab.id < maxId) {
+                maxId = tab.id;
+            }
+        });
+
+        // only broadcast the promotion if I am the new master
+        if (maxId === crosstab.id) {
+            broadcast(util.eventTypes.tabPromoted, crosstab.id);
+        } else {
+            // this is done so that in the case where multiple tabs are being
+            // started at the same time, and there is no current saved tab
+            // information, we will still have a value set for the master tab
+            util.tabs[MASTER_TAB] = {
+                id: madId,
+                lastUpdated: util.now()
+            };
+        }
+    }
+
     // Handle other tabs closing by updating internal tab model, and promoting
     // self if we are the lowest tab id
     eventHandler.addListener(util.eventTypes.tabClosed, function (message) {
@@ -225,22 +247,13 @@ var crosstab = (function () {
             delete util.tabs[id];
         }
 
-        if (util.tabs[MASTER_TAB].id === id) {
+        if (!util.tabs[MASTER_TAB] || util.tabs[MASTER_TAB].id === id) {
             // If the master was the closed tab, delete it and the highest
             // tab ID becomes the new master, which will save the tabs
-            delete util.tabs[MASTER_TAB];
-
-            var maxId = null;
-            util.forEach(util.tabs, function (tab) {
-                if (!maxId || tab.id < maxId) {
-                    maxId = tab.id;
-                }
-            });
-
-            // only broadcast the promotion if I am the new master
-            if (maxId === crosstab.id) {
-                broadcast(util.eventTypes.tabPromoted, crosstab.id);
+            if (util.tabs[MASTER_TAB]) {
+                delete util.tabs[MASTER_TAB];
             }
+            masterTabElection();
         } else if (util.tabs[MASTER_TAB].id === crosstab.id) {
             // If I am master, save the new tabs out
             setStoredTabs();
@@ -250,6 +263,12 @@ var crosstab = (function () {
     eventHandler.addListener(util.eventTypes.tabUpdated, function (message) {
         var tab = message.data;
         util.tabs[tab.id] = tab;
+
+        // If there is no master, hold an election
+        if (!util.tabs[MASTER_TAB]) {
+            masterTabElection();
+        }
+
         if (util.tabs[MASTER_TAB].id === tab.id) {
             util.tabs[MASTER_TAB] = tab;
         }
@@ -340,8 +359,6 @@ var crosstab = (function () {
     function setStoredTabs() {
         setLocalStorageItem(TABS_KEY, util.tabs);
     }
-
-
 
     function keepalive() {
         var now = util.now();

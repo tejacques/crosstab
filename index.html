@@ -33,6 +33,7 @@
                     <select ng-model="messageTab" ng-options="tab.id for (key,tab) in tabs">
                         <option value="">All tabs</option>
                     </select>
+                    <input type="submit" value="Send" />
                 </form>
                 <ul>
                     <li ng-repeat="message in messages">{{message}}</li>
