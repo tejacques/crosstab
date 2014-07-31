@@ -225,9 +225,9 @@ var crosstab = (function () {
             // tab ID becomes the new master, which will save the tabs
             delete util.tabs[MASTER_TAB];
 
-            var maxId = -1;
+            var maxId = null;
             util.forEach(util.tabs, function (tab) {
-                if (tab.id > maxId) {
+                if (!maxId || tab.id < maxId) {
                     maxId = tab.id;
                 }
             });
@@ -323,8 +323,8 @@ var crosstab = (function () {
 
     // --- Tab Setup ---
     // 5 second timeout
-    var TAB_KEEPALIVE = 6 * 1000;
-    var TAB_TIMEOUT = 15 * 1000;
+    var TAB_KEEPALIVE = 3 * 1000;
+    var TAB_TIMEOUT = 5 * 1000;
 
     function getStoredTabs() {
         var storedTabs = getLocalStorageItem(TABS_KEY);
@@ -335,6 +335,8 @@ var crosstab = (function () {
     function setStoredTabs() {
         setLocalStorageItem(TABS_KEY, util.tabs);
     }
+
+
 
     function keepalive() {
         var now = util.now();
@@ -354,17 +356,24 @@ var crosstab = (function () {
             util.tabs[MASTER_TAB] = myTab;
         }
 
-        util.tabs = util.filter(util.tabs, function (tab) {
+        function stillAlive(tab) {
             return now - tab.lastUpdated < TAB_TIMEOUT;
-        });
-
-        if (masterExpired && !iAmMaster) {
-            // notify other tabs of promotion to master
-            broadcast(util.eventTypes.tabPromoted, crosstab.id);
         }
+
+        function notAlive(tab, key) {
+            return key !== MASTER_TAB && !stillAlive(tab);
+        }
+
+        var deadTabs = util.filter(util.tabs, notAlive);
+        util.tabs = util.filter(util.tabs, stillAlive);
 
         // broadcast tabUpdated event
         broadcast(util.eventTypes.tabUpdated, myTab);
+
+        // broadcast tabClosed event for each tab that timed out
+        util.forEach(deadTabs, function (tab) {
+            broadcast(util.eventTypes.tabClosed, tab.id);
+        });
     }
 
     function keepaliveLoop() {
