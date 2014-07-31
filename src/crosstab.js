@@ -351,16 +351,10 @@ var crosstab = (function () {
             lastUpdated: now
         };
 
-        // Set my tab
-        util.tabs[crosstab.id] = myTab;
-        // Set master tab if it has expired
-        util.tabs[MASTER_TAB] = util.tabs[MASTER_TAB] || { lastUpdated: 0 };
-        var masterExpired = now - util.tabs[MASTER_TAB].lastUpdated > TAB_TIMEOUT;
-        var iAmMaster = util.tabs[MASTER_TAB].id === myTab.id;
-        if (masterExpired || iAmMaster) {
-            util.tabs[MASTER_TAB] = myTab;
-        }
+        // broadcast tabUpdated event
+        broadcast(util.eventTypes.tabUpdated, myTab);
 
+        // broadcast tabClosed event for each tab that timed out
         function stillAlive(tab) {
             return now - tab.lastUpdated < TAB_TIMEOUT;
         }
@@ -370,12 +364,6 @@ var crosstab = (function () {
         }
 
         var deadTabs = util.filter(util.tabs, notAlive);
-        util.tabs = util.filter(util.tabs, stillAlive);
-
-        // broadcast tabUpdated event
-        broadcast(util.eventTypes.tabUpdated, myTab);
-
-        // broadcast tabClosed event for each tab that timed out
         util.forEach(deadTabs, function (tab) {
             broadcast(util.eventTypes.tabClosed, tab.id);
         });
