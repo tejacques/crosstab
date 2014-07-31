@@ -44,15 +44,20 @@ var crosstab = (function () {
     util.filter = function (thing, fn) {
         var isArr = Object.prototype.toString.call(thing) === '[object Array]';
         var res = isArr ? [] : {};
-        util.forEach(thing, function (value, key) {
-            if (fn(value, key)) {
-                if (isArr) {
+
+        if (isArr) {
+            util.forEachArr(thing, function (value, key) {
+                if (fn(value, key)) {
                     res.push(value);
-                } else {
+                }
+            });
+        } else {
+            util.forEachObj(thing, function (value, key) {
+                if (fn(value, key)) {
                     res[key] = value;
                 }
-            }
-        });
+            });
+        }
 
         return res;
     };
