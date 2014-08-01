@@ -5,10 +5,13 @@ var crosstab = (function () {
     }
 
     // --- Utility ---
-    var MESSAGE_KEY = 'crosstab.MESSAGE_KEY';
-    var TABS_KEY = 'crosstab.TABS_KEY';
-    var MASTER_TAB = 'MASTER_TAB';
-    var util = {};
+    var util = {
+        keys: {
+            MESSAGE_KEY: 'crosstab.MESSAGE_KEY',
+            TABS_KEY: 'crosstab.TABS_KEY',
+            MASTER_TAB: 'MASTER_TAB'
+        }
+    };
 
     util.forEachObj = function (thing, fn) {
         for (var key in thing) {
@@ -172,7 +175,7 @@ var crosstab = (function () {
             // This is to force IE to behave properly
             return;
         }
-        if (event.key === MESSAGE_KEY) {
+        if (event.key === util.keys.MESSAGE_KEY) {
             var message = eventValue.data;
             // only handle if this message was meant for this tab.
             if (!message.destination || message.destination === crosstab.id) {
@@ -204,7 +207,7 @@ var crosstab = (function () {
     function beforeUnload() {
         var numTabs = 0;
         util.forEach(util.tabs, function (tab, key) {
-            if (key !== MASTER_TAB) {
+            if (key !== util.keys.MASTER_TAB) {
                 numTabs++;
             }
         });
@@ -232,7 +235,7 @@ var crosstab = (function () {
             // this is done so that in the case where multiple tabs are being
             // started at the same time, and there is no current saved tab
             // information, we will still have a value set for the master tab
-            util.tabs[MASTER_TAB] = {
+            util.tabs[util.keys.MASTER_TAB] = {
                 id: madId,
                 lastUpdated: util.now()
             };
@@ -247,14 +250,14 @@ var crosstab = (function () {
             delete util.tabs[id];
         }
 
-        if (!util.tabs[MASTER_TAB] || util.tabs[MASTER_TAB].id === id) {
+        if (!util.tabs[util.keys.MASTER_TAB] || util.tabs[util.keys.MASTER_TAB].id === id) {
             // If the master was the closed tab, delete it and the highest
             // tab ID becomes the new master, which will save the tabs
-            if (util.tabs[MASTER_TAB]) {
-                delete util.tabs[MASTER_TAB];
+            if (util.tabs[util.keys.MASTER_TAB]) {
+                delete util.tabs[util.keys.MASTER_TAB];
             }
             masterTabElection();
-        } else if (util.tabs[MASTER_TAB].id === crosstab.id) {
+        } else if (util.tabs[util.keys.MASTER_TAB].id === crosstab.id) {
             // If I am master, save the new tabs out
             setStoredTabs();
         }
@@ -265,14 +268,14 @@ var crosstab = (function () {
         util.tabs[tab.id] = tab;
 
         // If there is no master, hold an election
-        if (!util.tabs[MASTER_TAB]) {
+        if (!util.tabs[util.keys.MASTER_TAB]) {
             masterTabElection();
         }
 
-        if (util.tabs[MASTER_TAB].id === tab.id) {
-            util.tabs[MASTER_TAB] = tab;
+        if (util.tabs[util.keys.MASTER_TAB].id === tab.id) {
+            util.tabs[util.keys.MASTER_TAB] = tab;
         }
-        if (util.tabs[MASTER_TAB].id === crosstab.id) {
+        if (util.tabs[util.keys.MASTER_TAB].id === crosstab.id) {
             // If I am master, save the new tabs out
             setStoredTabs();
         }
@@ -281,7 +284,7 @@ var crosstab = (function () {
     eventHandler.addListener(util.eventTypes.tabPromoted, function (message) {
         var id = message.data;
         var lastUpdated = message.timestamp;
-        util.tabs[MASTER_TAB] = {
+        util.tabs[util.keys.MASTER_TAB] = {
             id: id,
             lastUpdated: lastUpdated
         };
@@ -324,7 +327,7 @@ var crosstab = (function () {
         // If the destination differs from the origin send it out, otherwise
         // handle it locally
         if (message.destination !== message.origin) {
-            setLocalStorageItem(MESSAGE_KEY, message);
+            setLocalStorageItem(util.keys.MESSAGE_KEY, message);
         }
 
         if (!message.destination || message.destination === message.origin) {
@@ -333,7 +336,7 @@ var crosstab = (function () {
     }
 
     function broadcastMaster(event, data) {
-        broadcast(event, data, util.tabs[MASTER_TAB].id);
+        broadcast(event, data, util.tabs[util.keys.MASTER_TAB].id);
     }
 
     // ---- Return ----
@@ -351,13 +354,13 @@ var crosstab = (function () {
     var TAB_TIMEOUT = 5 * 1000;
 
     function getStoredTabs() {
-        var storedTabs = getLocalStorageItem(TABS_KEY);
+        var storedTabs = getLocalStorageItem(util.keys.TABS_KEY);
         util.tabs = storedTabs || util.tabs || {};
         return util.tabs;
     }
 
     function setStoredTabs() {
-        setLocalStorageItem(TABS_KEY, util.tabs);
+        setLocalStorageItem(util.keys.TABS_KEY, util.tabs);
     }
 
     function keepalive() {
@@ -377,7 +380,7 @@ var crosstab = (function () {
         }
 
         function notAlive(tab, key) {
-            return key !== MASTER_TAB && !stillAlive(tab);
+            return key !== util.keys.MASTER_TAB && !stillAlive(tab);
         }
 
         var deadTabs = util.filter(util.tabs, notAlive);
