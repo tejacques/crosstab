@@ -21,6 +21,10 @@
 <body ng-app="crossTabApp">
     <script src="/src/crosstab.js"></script>
     <div ng-controller="crossTabCtrl">
+        <a href="/" target="_blank">New Tab</a>
+        <button ng-click="clearLocalStorageSetupKeys()">
+            Clear Local Storage Setup Keys
+        </button>
         <div>
             <div ng-if="myTab.id == masterTab.id">I am master</div>
             <div class="tabs" ng-repeat="(key,tab) in tabs" ng-class="{ master: tab.id == masterTab.id, mytab: tab.id == myTab.id }">
@@ -40,8 +44,9 @@
                 </ul>
             </div>
         </div>
+        <div id="logDiv"></div>
     </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
     <script>
         var crossTabApp = angular.module('crossTabApp', []);
 
@@ -95,6 +100,12 @@
                     $scope.msg = null;
                 }
             };
+
+            $scope.clearLocalStorageSetupKeys = function () {
+                console.log('clearing local storage keys');
+                localStorage.clear(crosstab.util.keys.SUPPORTED_KEY);
+                localStorage.clear(crosstab.util.keys.FROZEN_TAB_ENVIRONMENT);
+            }
 
             function udt() {
                 setTimeout(function() {
