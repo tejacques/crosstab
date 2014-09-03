@@ -203,7 +203,12 @@ var crosstab = (function () {
     };
 
     function onStorageEvent(event) {
-        var eventValue = event.newValue ? JSON.parse(event.newValue) : {};
+        var eventValue;
+        try {
+            eventValue = event.newValue ? JSON.parse(event.newValue) : {};
+        } catch (e) {
+            eventValue = {};
+        }
         if (!eventValue.id || eventValue.id === crosstab.id) {
             // This is to force IE to behave properly
             return;
