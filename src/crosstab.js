@@ -177,6 +177,7 @@ var crosstab = (function () {
         return {
             addListener: addListener,
             on: addListener,
+            off: removeListener,
             once: once,
             emit: emit,
             listeners: listeners,
@@ -252,6 +253,22 @@ var crosstab = (function () {
         }
     }
 
+    function getMaster() {
+        return util.tabs[util.keys.MASTER_TAB];
+    }
+
+    function setMaster(newMaster) {
+        util.tabs[util.keys.MASTER_TAB] = newMaster;
+    }
+
+    function deleteMaster() {
+        delete util.tabs[util.keys.MASTER_TAB];
+    }
+
+    function isMaster() {
+        return getMaster().id === crosstab.id;
+    }
+
     function masterTabElection() {
         var maxId = null;
         util.forEach(util.tabs, function (tab) {
@@ -267,10 +284,10 @@ var crosstab = (function () {
             // this is done so that in the case where multiple tabs are being
             // started at the same time, and there is no current saved tab
             // information, we will still have a value set for the master tab
-            util.tabs[util.keys.MASTER_TAB] = {
+            setMaster({
                 id: maxId,
                 lastUpdated: util.now()
-            };
+            });
         }
     }
 
@@ -282,14 +299,14 @@ var crosstab = (function () {
             delete util.tabs[id];
         }
 
-        if (!util.tabs[util.keys.MASTER_TAB] || util.tabs[util.keys.MASTER_TAB].id === id) {
+        if (!getMaster() || getMaster().id === id) {
             // If the master was the closed tab, delete it and the highest
             // tab ID becomes the new master, which will save the tabs
-            if (util.tabs[util.keys.MASTER_TAB]) {
-                delete util.tabs[util.keys.MASTER_TAB];
+            if (getMaster()) {
+                deleteMaster();
             }
             masterTabElection();
-        } else if (util.tabs[util.keys.MASTER_TAB].id === crosstab.id) {
+        } else if (getMaster().id === crosstab.id) {
             // If I am master, save the new tabs out
             setStoredTabs();
         }
@@ -300,14 +317,14 @@ var crosstab = (function () {
         util.tabs[tab.id] = tab;
 
         // If there is no master, hold an election
-        if (!util.tabs[util.keys.MASTER_TAB]) {
+        if (!getMaster()) {
             masterTabElection();
         }
 
-        if (util.tabs[util.keys.MASTER_TAB].id === tab.id) {
-            util.tabs[util.keys.MASTER_TAB] = tab;
+        if (getMaster().id === tab.id) {
+            setMaster(tab);
         }
-        if (util.tabs[util.keys.MASTER_TAB].id === crosstab.id) {
+        if (getMaster().id === crosstab.id) {
             // If I am master, save the new tabs out
             setStoredTabs();
         }
@@ -316,10 +333,10 @@ var crosstab = (function () {
     eventHandler.addListener(util.eventTypes.tabPromoted, function (message) {
         var id = message.data;
         var lastUpdated = message.timestamp;
-        util.tabs[util.keys.MASTER_TAB] = {
+        setMaster({
             id: id,
             lastUpdated: lastUpdated
-        };
+        });
 
         if (crosstab.id === id) {
             // set the tabs in localStorage
@@ -368,7 +385,7 @@ var crosstab = (function () {
     }
 
     function broadcastMaster(event, data) {
-        broadcast(event, data, util.tabs[util.keys.MASTER_TAB].id);
+        broadcast(event, data, getMaster().id);
     }
 
     // ---- Return ----
@@ -495,15 +512,15 @@ var crosstab = (function () {
                 var recursiveTimeout = function (iters) {
                     var diff = util.now() - start;
 
-                    if (setupComplete) {
-                        // do nothing
-                    } else if (iters <= 0 && diff > PING_TIMEOUT) {
-                        frozenTabEnvironmentDetected();
-                        util.events.emit('setupComplete');
-                    } else {
-                        timeout = setTimeout(function () {
-                            recursiveTimeout(iters - 1);
-                        }, 5);
+                    if (!setupComplete) {
+                        if (iters <= 0 && diff > PING_TIMEOUT) {
+                            frozenTabEnvironmentDetected();
+                            util.events.emit('setupComplete');
+                        } else {
+                            timeout = setTimeout(function () {
+                                recursiveTimeout(iters - 1);
+                            }, 5);
+                        }
                     }
                 };
 
