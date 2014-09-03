@@ -193,7 +193,8 @@ var crosstab = (function () {
     // any of the internal workings
     util.events = {
         addListener: eventHandler.addListener,
-        on: eventHandler.addListener,
+        on: eventHandler.on,
+        off: eventHandler.off,
         once: eventHandler.once,
         emit: eventHandler.emit,
         listeners: eventHandler.listeners,
