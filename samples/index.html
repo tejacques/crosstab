@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>crosstab.js</title>
+    <style type="text/css">
+        .tabs {
+            margin: 5px;
+           -moz-box-sizing:    border-box;
+           -webkit-box-sizing: border-box;
+            box-sizing:        border-box;
+        }
+
+        .master {
+            outline: 3px solid red;
+        }
+
+        .mytab {
+            border: 3px solid green;
+        }
+    </style>
+</head>
+<body ng-app="crossTabApp">
+    <script src="/src/crosstab.js"></script>
+    <div ng-controller="crossTabCtrl">
+        <div>
+            <div class="tabs" ng-repeat="(key,tab) in tabs" ng-class="{ master: tab.id == masterTab.id, mytab: tab.id == myTab.id }">
+                <div>ID: {{tab.id}}</div><div>lastUpdated: {{((now() - tab.lastUpdated) / 1000) | number:1}}s ago</div>
+            </div>
+            <div>
+                <h2>Messages</h2>
+                <form ng-submit="sendMessage()">
+                    <input ng-model="msg" type="text" />
+                    <select ng-model="messageTab" ng-options="tab.id for (key,tab) in tabs">
+                        <option value="">All tabs</option>
+                    </select>
+                    <input type="submit" value="Send" />
+                </form>
+                <ul>
+                    <li ng-repeat="message in messages">{{message}}</li>
+                </ul>
+            </div>
+        </div>
+        <div id="logDiv"></div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+    <script>
+        var crossTabApp = angular.module('crossTabApp', []);
+
+        crossTabApp.controller('crossTabCtrl', function ($scope) {
+            $scope.msg = null;
+            $scope.messageTab = null;
+            $scope.tabs = [];
+
+            $scope.messages = [];
+
+            $scope.now = function () {
+                return crosstab.util.now();
+            }
+
+            $scope.stringify = function (obj) {
+                return JSON.stringify(obj);
+            }
+
+            $scope.receiveMessage = function (message) {
+                $scope.message.push(message);
+            };
+
+            $scope.updateTabs = function () {
+                $scope.myTab = crosstab.util.tabs[crosstab.id];
+                $scope.masterTab = crosstab.util.tabs['MASTER_TAB'];
+
+                while ($scope.tabs.length > 0) {
+                    $scope.tabs.pop();
+                }
+
+                var newtabs = JSON.parse(JSON.stringify(crosstab.util.tabs));
+                newtabs = crosstab.util.filter(newtabs, function (value, key) {
+                    return key !== 'MASTER_TAB';
+                });
+
+                $scope.tabs = newtabs;
+
+                if ($scope.messageTab) {
+                    if ($scope.tabs[$scope.messageTab.id]) {
+                        $scope.messageTab = $scope.tabs[$scope.messageTab.id];
+                    } else {
+                        $scope.messageTab = null;
+                    }
+                }
+            };
+            $scope.updateTabs();
+
+            $scope.addMessage = function (message) {
+                $scope.messages.push(message);
+            };
+
+            $scope.sendMessage = function () {
+                if ($scope.msg) {
+                    crosstab.broadcast('message', $scope.msg, $scope.messageTab ? $scope.messageTab.id : null);
+                    $scope.msg = null;
+                }
+            };
+
+            function udt() {
+                setTimeout(function() {
+                    $scope.updateTabs();
+                    $scope.$apply();
+                }, 0);
+            }
+
+            crosstab.util.events.on(crosstab.util.eventTypes.tabUpdated, function () {
+                udt();
+            });
+
+            crosstab.util.events.on(crosstab.util.eventTypes.tabClosed, function () {
+                udt();
+            });
+
+            crosstab.util.events.on(crosstab.util.eventTypes.tabPromoted, function () {
+                udt();
+            });
+
+            crosstab.util.events.on('message', function (message) {
+                console.log("===== MESSAGE EVENT RECEIVED =========");
+                $scope.addMessage(message);
+                if (message.origin !== $scope.myTab.id) {
+                    $scope.$apply();
+                }
+            });
+
+            function timer() {
+                $scope.$digest();
+            }
+
+            setInterval(timer, 100);
+        });
+    </script>
+</body>
+</html>

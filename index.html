@@ -3,136 +3,66 @@
 <head>
     <title>crosstab.js</title>
     <style type="text/css">
-        .tabs {
-            margin: 5px;
-           -moz-box-sizing:    border-box;
-           -webkit-box-sizing: border-box;
-            box-sizing:        border-box;
-        }
-        .master {
-            outline: 3px solid red;
+        .tab {
+            display: inline-block;
         }
 
-        .mytab {
-            border: 3px solid green;
+        .remove-tab {
+            display: block;
         }
     </style>
 </head>
-<body ng-app="crossTabApp">
-    <script src="/src/crosstab.js"></script>
-    <div ng-controller="crossTabCtrl">
-        <a href="/" target="_blank">New Tab</a>
+<body ng-app="crossTabAppMaster">
+    <div ng-controller="crossTabMasterCtrl">
+        <button ng-click="getLocalStorageSetupKeys()">
+            Get Local Storage Setup Keys
+        </button>
         <button ng-click="clearLocalStorageSetupKeys()">
             Clear Local Storage Setup Keys
         </button>
+        <button ng-click="addTab()">Add Tab</button>
+        <br />
         <div>
-            <div ng-if="myTab.id == masterTab.id">I am master</div>
-            <div class="tabs" ng-repeat="(key,tab) in tabs" ng-class="{ master: tab.id == masterTab.id, mytab: tab.id == myTab.id }">
-                <span>ID: {{tab.id}}</span><span>lastUpdated: {{tab.lastUpdated}}</span>
+            <div class="tab" ng-repeat="tab in tabs">
+                <button class="remove-tab" ng-click="removeTab($index)">Close Tab</button>
+                <iframe id="iframe-{{$index}}" class="crosstab-frame" src="/samples/index.html" height="400" width="300"></iframe>
             </div>
-            <div>
-                <h2>Messages</h2>
-                <form ng-submit="sendMessage()">
-                    <input ng-model="msg" type="text" />
-                    <select ng-model="messageTab" ng-options="tab.id for (key,tab) in tabs">
-                        <option value="">All tabs</option>
-                    </select>
-                    <input type="submit" value="Send" />
-                </form>
-                <ul>
-                    <li ng-repeat="message in messages">{{message}}</li>
-                </ul>
-            </div>
+
         </div>
         <div id="logDiv"></div>
     </div>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
     <script>
-        var crossTabApp = angular.module('crossTabApp', []);
+        var crossTabApp = angular.module('crossTabAppMaster', []);
 
-        crossTabApp.controller('crossTabCtrl', function ($scope) {
-            $scope.msg = null;
-            $scope.messageTab = null;
+        crossTabApp.controller('crossTabMasterCtrl', function ($scope) {
             $scope.tabs = [];
-
-            $scope.messages = [];
-
-            $scope.stringify = function (obj) {
-                return JSON.stringify(obj);
-            }
-
-            $scope.receiveMessage = function (message) {
-                $scope.message.push(message);
+            $scope.addTab = function () {
+                $scope.tabs.push({});
             };
 
-            $scope.updateTabs = function () {
-                $scope.myTab = crosstab.util.tabs[crosstab.id];
-                $scope.masterTab = crosstab.util.tabs['MASTER_TAB'];
-
-                while ($scope.tabs.length > 0) {
-                    $scope.tabs.pop();
-                }
-
-                var newtabs = JSON.parse(JSON.stringify(crosstab.util.tabs));
-                newtabs = crosstab.util.filter(newtabs, function (value, key) {
-                    return key !== 'MASTER_TAB';
-                });
-
-                $scope.tabs = newtabs;
-
-                if ($scope.messageTab) {
-                    if ($scope.tabs[$scope.messageTab.id]) {
-                        $scope.messageTab = $scope.tabs[$scope.messageTab.id];
-                    } else {
-                        $scope.messageTab = null;
-                    }
-                }
-            };
-            $scope.updateTabs();
-
-            $scope.addMessage = function (message) {
-                $scope.messages.push(message);
-            };
-
-            $scope.sendMessage = function () {
-                if ($scope.msg) {
-                    crosstab.broadcast('message', $scope.msg, $scope.messageTab ? $scope.messageTab.id : null);
-                    $scope.msg = null;
-                }
+            $scope.removeTab = function (index) {
+                var iframe = document.getElementById('iframe-' + index);
+                var event = new Event('beforeunload');
+                iframe.contentWindow.dispatchEvent(event);
+                $scope.tabs.splice(index, 1);
             };
 
             $scope.clearLocalStorageSetupKeys = function () {
                 console.log('clearing local storage keys');
-                localStorage.clear(crosstab.util.keys.SUPPORTED_KEY);
-                localStorage.clear(crosstab.util.keys.FROZEN_TAB_ENVIRONMENT);
-            }
+                localStorage.clear('crosstab.SUPPORTED');
+                localStorage.clear('crosstab.FROZEN_TAB_ENVIRONMENT');
+            };
 
-            function udt() {
-                setTimeout(function() {
-                    $scope.updateTabs();
-                    $scope.$apply();
-                }, 0);
-            }
+            $scope.getLocalStorageSetupKeys = function () {
+                console.log('getting local storage keys');
+                console.log(localStorage.getItem('crosstab.SUPPORTED'));
+                console.log(localStorage.getItem('crosstab.FROZEN_TAB_ENVIRONMENT'));
+            };
 
-            crosstab.util.events.on(crosstab.util.eventTypes.tabUpdated, function () {
-                udt();
-            });
-
-            crosstab.util.events.on(crosstab.util.eventTypes.tabClosed, function () {
-                udt();
-            });
-
-            crosstab.util.events.on(crosstab.util.eventTypes.tabPromoted, function () {
-                udt();
-            });
-
-            crosstab.util.events.on('message', function (message) {
-                console.log("===== MESSAGE EVENT RECEIVED =========");
-                $scope.addMessage(message);
-                if (message.origin !== $scope.myTab.id) {
-                    $scope.$apply();
-                }
-            });
+            window.addEventListener('beforeunload', function () {
+                localStorage.clear('crosstab.TABS_KEY');
+            }, false);
         });
     </script>
 </body>
