@@ -1,4 +1,4 @@
-var crosstab = (function () {
+rosstab = (function () {
 
     // --- Handle Support ---
     // See: http://detectmobilebrowsers.com/about
@@ -562,7 +562,7 @@ var crosstab = (function () {
                 return;
             }
 
-            if (util.now() - message.timestamp < 100) {
+            if (util.now() - message.timestamp < PING_TIMEOUT) {
                 crosstab.broadcast('PONG', null, message.origin);
             }
         });
@@ -572,3 +572,4 @@ var crosstab = (function () {
 
     return crosstab;
 })();
+
