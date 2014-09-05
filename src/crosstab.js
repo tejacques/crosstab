@@ -1,4 +1,4 @@
-rosstab = (function () {
+var crosstab = (function () {
 
     // --- Handle Support ---
     // See: http://detectmobilebrowsers.com/about
