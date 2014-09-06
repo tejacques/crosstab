@@ -21,6 +21,7 @@ crosstab is a javascript utility library for inter-tab communication on the same
 |   IE    |        9+      |
 | Chrome  |       35+      |
 | FireFox |       30+      |
+| Safari  |        6.1+    |
  
 
 Why was it made?
