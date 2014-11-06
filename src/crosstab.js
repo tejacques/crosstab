@@ -1,3 +1,9 @@
+/*!
+ * crosstab JavaScript Library v0.1.0
+ * https://github.com/tejacques/crosstab
+ *
+ * License: Apache 2.0 https://github.com/tejacques/crosstab/blob/master/LICENSE
+ */
 ; (function (define) {
 define(function(require,exports,module){
 
