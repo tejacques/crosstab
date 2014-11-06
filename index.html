@@ -25,7 +25,7 @@
         <div>
             <div class="tab" ng-repeat="tab in tabs">
                 <button class="remove-tab" ng-click="removeTab($index)">Close Tab</button>
-                <iframe id="iframe-{{$index}}" class="crosstab-frame" src="/samples/index.html" height="400" width="300"></iframe>
+                <iframe id="iframe-{{$index}}" class="crosstab-frame" ng-src="/samples/index.html" height="400" width="300"></iframe>
             </div>
 
         </div>
@@ -48,20 +48,29 @@
                 $scope.tabs.splice(index, 1);
             };
 
+            var localStorage = window.localStorage;
+            var localStorageSupported = !!localStorage;
+
             $scope.clearLocalStorageSetupKeys = function () {
-                console.log('clearing local storage keys');
-                localStorage.clear('crosstab.SUPPORTED');
-                localStorage.clear('crosstab.FROZEN_TAB_ENVIRONMENT');
+                if (localStorageSupported) {
+                    console.log('clearing local storage keys');
+                    localStorage.clear('crosstab.SUPPORTED');
+                    localStorage.clear('crosstab.FROZEN_TAB_ENVIRONMENT');
+                }
             };
 
             $scope.getLocalStorageSetupKeys = function () {
-                console.log('getting local storage keys');
-                console.log(localStorage.getItem('crosstab.SUPPORTED'));
-                console.log(localStorage.getItem('crosstab.FROZEN_TAB_ENVIRONMENT'));
+                if (localStorageSupported) {
+                    console.log('getting local storage keys');
+                    console.log(localStorage.getItem('crosstab.SUPPORTED'));
+                    console.log(localStorage.getItem('crosstab.FROZEN_TAB_ENVIRONMENT'));
+                }
             };
 
             window.addEventListener('beforeunload', function () {
-                localStorage.clear('crosstab.TABS_KEY');
+                if (localStorageSupported) {
+                    localStorage.clear('crosstab.TABS_KEY');
+                }
             }, false);
         });
     </script>
