@@ -423,7 +423,7 @@ define(function(require,exports,module){
 
     // --- Crosstab supported ---
     // Check to see if the global supported key has been set.
-    if (!setupComplete) {
+    if (!setupComplete && crosstab.supported) {
         var supportedRaw = getLocalStorageRaw(util.keys.SUPPORTED_KEY);
         var supported = supportedRaw.data;
         if (supported === false || supported === true) {
