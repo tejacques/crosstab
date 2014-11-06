@@ -245,7 +245,7 @@ define(function(require,exports,module){
     }
 
     function getLocalStorageRaw(key) {
-        var json = localStorage.getItem(key);
+        var json = localStorage ? localStorage.getItem(key) : null;
         var item = json ? JSON.parse(json) : {};
         return item;
     }
