@@ -1,4 +1,5 @@
-;(function(define){define(function(require,exports,module){
+; (function (define) {
+define(function(require,exports,module){
 
     // --- Handle Support ---
     // See: http://detectmobilebrowsers.com/about
@@ -572,7 +573,32 @@
 
     module.exports = crosstab;
 
-});})(typeof define=='function'&&define.amd?define
-:(function(n,w){'use strict';return typeof module=='object'?function(c){
-c(require,exports,module);}:function(c){var m={exports:{}};c(function(n){
-return w[n];},m.exports,m);w[n]=m.exports;};})('crosstab',this));
+/*!
+ * UMD/AMD/Global context Module Loader wrapper
+ * based off https://gist.github.com/wilsonpage/8598603
+ *
+ * This wrapper will try to use a module loader with the
+ * following priority:
+ *
+ *  1.) AMD
+ *  2.) CommonJS
+ *  3.) Context Variable (window in the browser)
+ */
+});})(typeof define == 'function' && define.amd ? define
+    : (function (name, context) {
+        'use strict';
+        return typeof module == 'object' ? function (define) {
+            define(require, exports, module);
+        }
+        : function (define) {
+            var module = {
+                exports: {}
+            };
+            var require = function (n) {
+                return context[n];
+            };
+
+            define(require, module.exports, module);
+            context[name] = module.exports;
+        };
+    })('crosstab', this));
