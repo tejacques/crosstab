@@ -1,4 +1,4 @@
-var crosstab = (function () {
+;(function(define){define(function(require,exports,module){
 
     // --- Handle Support ---
     // See: http://detectmobilebrowsers.com/about
@@ -570,6 +570,9 @@ var crosstab = (function () {
         keepaliveLoop();
     }
 
-    return crosstab;
-})();
+    module.exports = crosstab;
 
+});})(typeof define=='function'&&define.amd?define
+:(function(n,w){'use strict';return typeof module=='object'?function(c){
+c(require,exports,module);}:function(c){var m={exports:{}};c(function(n){
+return w[n];},m.exports,m);w[n]=m.exports;};})('crosstab',this));
