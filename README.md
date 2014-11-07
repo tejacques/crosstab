@@ -3,6 +3,14 @@ crosstab
 
 A utility library from cross-tab communication using localStorage.
 
+How can I get it?
+-----------------
+
+crosstab is available through bower and can be installed with the following command:
+
+```
+bower install callr
+```
 
 What is it?
 -----------
@@ -22,6 +30,46 @@ crosstab is a javascript utility library for inter-tab communication on the same
 | Chrome  |       35+      |
 | FireFox |       30+      |
 | Safari  |        6.1+    |
+
+# API #
+
+Most of the time, you will only need to do two things with crosstab, set up event handlers, and fire off events.
+
+## Broadcasts ##
+
+crosstab broadcasts messages like this:
+
+```JavaScript
+crosstab.broadcast(event, data, destination);
+```
+
+If a destination is not specified, the message is broadcast to all tabs, including itself.
+
+## Event Handlers ##
+
+crosstab registers event handlers like this:
+
+```JavaScript
+crosstab.util.events.on('eventName', function(message) {
+    // Handle event
+});
+```
+
+The API is still being fleshed out, but it is likely that the event handling will be pushed up to be exposed directly on crosstab.
+
+The messages received by events have the following format:
+
+```JavaScript
+var message = {
+    event: event,             // The name of the event
+    data: data,               // The data to pass
+    destination: destination, // The destination tab
+    origin: crosstab.id,      // The origin tab
+    timestamp: util.now()     // The time the message was created
+};
+```
+
+The event will not fire if the destination is present and differs from the id of the current tab.
  
 
 Why was it made?
