@@ -9,13 +9,15 @@
   "main": [
     "./src/crosstab.js"
   ],
-  "ignore": [
-    "./!(src/crosstab.js)"
-  ],
-  "dependencies": {
-  },
   "keywords": [
-    "tab", "cross tab", "crosstab"
+    "tab",
+    "cross",
+    "tab",
+    "crosstab"
   ],
-  "license": "Apache License Version 2.0"
+  "license": "Apache License Version 2.0",
+  "moduleType": [
+    "amd",
+    "globals"
+  ]
 }
