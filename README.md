@@ -1,7 +1,7 @@
 crosstab
 ========
 
-A utility library from cross-tab communication using localStorage.
+A utility library for cross-tab communication using localStorage.
 
 How can I get it?
 -----------------
