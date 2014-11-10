@@ -1,5 +1,5 @@
 /*!
- * crosstab JavaScript Library v0.1.0
+ * crosstab JavaScript Library v0.2.0
  * https://github.com/tejacques/crosstab
  *
  * License: Apache 2.0 https://github.com/tejacques/crosstab/blob/master/LICENSE
@@ -385,6 +385,10 @@ define(function(require,exports,module){
 
     // --- Setup message sending and handling ---
     function broadcast(event, data, destination) {
+        if (!crosstab.supported) {
+            notSupported();
+        }
+
         var message = {
             event: event,
             data: data,
@@ -427,6 +431,8 @@ define(function(require,exports,module){
     crosstab.util = util;
     crosstab.broadcast = broadcast;
     crosstab.broadcastMaster = broadcastMaster;
+    crosstab.on = util.events.on;
+    crosstab.once = util.events.once;
 
     // --- Crosstab supported ---
     // Check to see if the global supported key has been set.
@@ -455,7 +461,6 @@ define(function(require,exports,module){
         frozenTabEnvironment = true;
         setLocalStorageItem(util.keys.FROZEN_TAB_ENVIRONMENT, true);
         setLocalStorageItem(util.keys.SUPPORTED_KEY, false);
-        crosstab.broadcast = notSupported;
     }
 
     // --- Tab Setup ---
