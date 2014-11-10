@@ -50,12 +50,10 @@ If a destination is not specified, the message is broadcast to all tabs, includi
 crosstab registers event handlers like this:
 
 ```JavaScript
-crosstab.util.events.on('eventName', function(message) {
+crosstab.on('eventName', function(message) {
     // Handle event
 });
 ```
-
-The API is still being fleshed out, but it is likely that the event handling will be pushed up to be exposed directly on crosstab.
 
 The messages received by events have the following format:
 
