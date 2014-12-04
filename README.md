@@ -9,7 +9,7 @@ How can I get it?
 crosstab is available through bower and can be installed with the following command:
 
 ```
-bower install callr
+bower install crosstab
 ```
 
 What is it?
