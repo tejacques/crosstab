@@ -6,6 +6,7 @@
  */
 ; (function (define) {
 define(function(require,exports,module){
+    'use strict';
 
     // --- Handle Support ---
     // See: http://detectmobilebrowsers.com/about
