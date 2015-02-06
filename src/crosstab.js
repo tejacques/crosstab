@@ -1,11 +1,42 @@
 /*!
- * crosstab JavaScript Library v0.2.0
+ * crosstab JavaScript Library v0.2.1
  * https://github.com/tejacques/crosstab
  *
  * License: Apache 2.0 https://github.com/tejacques/crosstab/blob/master/LICENSE
  */
-; (function (define) {
-define(function(require,exports,module){
+; (function (context, name, factory) {
+    /*!
+     * UMD/AMD/Global context Module Loader wrapper
+     *
+     * This wrapper will try to use a module loader with the
+     * following priority:
+     *
+     *  1.) AMD
+     *  2.) CommonJS
+     *  3.) Context Variable (window in the browser)
+     */
+    'use strict';
+    (typeof define === 'function' && define.amd ? define
+    : (function (name) {
+        return typeof module === 'object' ? function (factory) {
+            factory(require, exports, module);
+        }
+        : function (factory) {
+            var module = {
+                exports: {}
+            };
+            var require = function (n) {
+                if (n === 'jquery') {
+                    n = 'jQuery';
+                }
+                return context[n];
+            };
+
+            factory(require, module.exports, module);
+            context[name] = module.exports;
+        };
+    })(name))(factory);
+})(this, 'crosstab', function (require, exports, module) {
     'use strict';
 
     // --- Handle Support ---
@@ -41,7 +72,7 @@ define(function(require,exports,module){
             reasons.push('frozen tab environment detected');
         }
 
-        if(reasons.length > 0) {
+        if (reasons.length > 0) {
             errorMsg += ': ' + reasons.join(', ');
         }
 
@@ -591,33 +622,4 @@ define(function(require,exports,module){
     }
 
     module.exports = crosstab;
-
-/*!
- * UMD/AMD/Global context Module Loader wrapper
- * based off https://gist.github.com/wilsonpage/8598603
- *
- * This wrapper will try to use a module loader with the
- * following priority:
- *
- *  1.) AMD
- *  2.) CommonJS
- *  3.) Context Variable (window in the browser)
- */
-});})(typeof define == 'function' && define.amd ? define
-    : (function (name, context) {
-        'use strict';
-        return typeof module == 'object' ? function (define) {
-            define(require, exports, module);
-        }
-        : function (define) {
-            var module = {
-                exports: {}
-            };
-            var require = function (n) {
-                return context[n];
-            };
-
-            define(require, module.exports, module);
-            context[name] = module.exports;
-        };
-    })('crosstab', this));
+});
