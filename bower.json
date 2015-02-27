@@ -12,8 +12,11 @@
   "keywords": [
     "tab",
     "cross",
-    "tab",
-    "crosstab"
+    "crosstab",
+    "inter",
+    "intercom",
+    "broadcast",
+    "localStorage"
   ],
   "license": "Apache License Version 2.0",
   "moduleType": [
