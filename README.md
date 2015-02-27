@@ -6,8 +6,14 @@ A utility library for cross-tab communication using localStorage.
 How can I get it?
 -----------------
 
-crosstab is available through bower and can be installed with the following command:
+crosstab is available through npm and bower and can be installed with the following command:
 
+npm:
+```
+npm install crosstab
+```
+
+bower:
 ```
 bower install crosstab
 ```
