@@ -15,6 +15,7 @@
     var localStorage;
     try {
         localStorage = window.localStorage;
+        localStorage = window['ie-eventlistener/storage'] || window.localStorage;
     } catch (e) {
         // New versions of Firefox throw a Security exception
         // if cookies are disabled. See
