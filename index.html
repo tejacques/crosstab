@@ -49,13 +49,19 @@
             };
 
             var localStorage = window.localStorage;
-            var localStorageSupported = !!localStorage;
+            var localStorageSupported = true;
+
+            try {
+                localStorageSupported = !!localStorage;
+            } catch (e) {
+                localStorageSupported = false;
+            }
 
             $scope.clearLocalStorageSetupKeys = function () {
                 if (localStorageSupported) {
                     console.log('clearing local storage keys');
-                    localStorage.clear('crosstab.SUPPORTED');
-                    localStorage.clear('crosstab.FROZEN_TAB_ENVIRONMENT');
+                    localStorage.removeItem('crosstab.SUPPORTED');
+                    localStorage.removeItem('crosstab.FROZEN_TAB_ENVIRONMENT');
                 }
             };
 
@@ -69,7 +75,7 @@
 
             window.addEventListener('beforeunload', function () {
                 if (localStorageSupported) {
-                    localStorage.clear('crosstab.TABS_KEY');
+                    localStorage.removeItem('crosstab.TABS_KEY');
                 }
             }, false);
         });
