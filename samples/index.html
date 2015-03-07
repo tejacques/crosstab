@@ -121,7 +121,7 @@
             });
 
             crosstab.util.events.on('message', function (message) {
-                console.log("===== MESSAGE EVENT RECEIVED =========");
+                console.log("===== " + crosstab.id + " MESSAGE EVENT RECEIVED FROM " + message.origin + " =========");
                 $scope.addMessage(message);
                 if (message.origin !== $scope.myTab.id) {
                     $scope.$apply();

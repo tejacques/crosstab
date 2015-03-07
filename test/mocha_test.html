@@ -3,6 +3,9 @@
     <head>
         <title>Crosstab Mocha Tests</title>
         <meta charset="utf=8">
+        <script>
+            localStorage.clear();
+        </script>
         <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
     </head>
     <body>
@@ -13,8 +16,8 @@
           mocha.ui('bdd');
           mocha.reporter('html');
         </script>
-        <script src="src/crosstab.js"></script>
-        <script src="tests/test-crosstab.js"></script>
+        <script src="/src/crosstab.js"></script>
+        <script id="crosstab" src="/test/test-crosstab.js"></script>
         <script>
           if (window.mochaPhantomJS) {
             mochaPhantomJS.run();

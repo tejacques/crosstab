@@ -43,7 +43,10 @@
 
             $scope.removeTab = function (index) {
                 var iframe = document.getElementById('iframe-' + index);
-                var event = new Event('beforeunload');
+                // IE Doesn't have new Event()
+                var event = document.createEvent('CustomEvent');
+                event.initCustomEvent('beforeunload', false, false, null);
+                //var event = new Event('beforeunload');
                 iframe.contentWindow.dispatchEvent(event);
                 $scope.tabs.splice(index, 1);
             };

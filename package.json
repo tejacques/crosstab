@@ -23,8 +23,13 @@
     "grunt-contrib-connect": "~0.8.0",
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-watch": "~0.6.1",
+    "grunt-mocha-phantomjs": "^0.6.1",
+    "mocha": "^2.1.0",
     "mocha-phantomjs": "^3.5.3",
     "phantomjs": "^1.9.15"
   },
-  "license": "Apache 2.0"
+  "license": "Apache 2.0",
+  "scripts": {
+      "test": "grunt test"
+  }
 }
