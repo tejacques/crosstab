@@ -3,6 +3,8 @@ crosstab
 
 A utility library for cross-tab communication using localStorage.
 
+[![Build Status](https://travis-ci.org/tejacques/crosstab.svg?branch=master)](https://travis-ci.org/tejacques/crosstab)
+
 How can I get it?
 -----------------
 
