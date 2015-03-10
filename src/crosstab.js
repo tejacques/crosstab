@@ -217,6 +217,8 @@
         removeAllListeners: eventHandler.removeAllListeners
     };
 
+    var lastNewValue;
+    var lastOldValue;
     function onStorageEvent(event) {
         var eventValue;
         try {
@@ -228,6 +230,12 @@
             // This is to force IE to behave properly
             return;
         }
+        if (event.newValue === lastNewValue && event.oldValue === lastOldValue) {
+            // Fix bug in IE11 where StorageEvents in iframes are sent twice.
+            return;
+        }
+        lastNewValue = event.newValue;
+        lastOldValue = event.oldValue;
         if (event.key === util.keys.MESSAGE_KEY) {
             var message = eventValue.data;
             // only handle if this message was meant for this tab.
