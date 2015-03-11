@@ -1,5 +1,30 @@
 module.exports = function (grunt) {
     var browsers = {
+        chrome: [
+           ['Linux', 'chrome', '40'],
+        ],
+        firefox: [
+           ['Linux', 'firefox', '35'],
+        ],
+        'ie8': [
+           ['Windows XP', 'internet explorer', '8'],
+        ],
+        'ie9': [
+           ['Windows 7', 'internet explorer', '9'],
+        ],
+        'ie10': [
+           ['Windows 7', 'internet explorer', '10'],
+        ],
+        'ie11': [
+           ['Windows 8.1', 'internet explorer', '11'],
+        ],
+        'ie': [
+           ['Windows 8.1', 'internet explorer', '11'],
+        ],
+        safari: [
+           ['OSX 10.10', 'safari', '8']
+        ],
+
         quick: [
            ['Windows 7', 'chrome', '40'],
            ['Windows 7', 'firefox', '35'],
@@ -80,11 +105,55 @@ module.exports = function (grunt) {
                     tags: ["master"]
                 }
             },
+            chrome: {
+                options: {
+                    urls: ["http://localhost:9000/test/mocha_test.html"],
+                    tunnelTimeout: 5,
+                    build: 'dev-chrome-latest',
+                    concurrency: 3,
+                    browsers: browsers.chrome,
+                    testname: "chrome-latest mocha tests",
+                    tags: ["master"]
+                }
+            },
+            ie: {
+                options: {
+                    urls: ["http://localhost:9000/test/mocha_test.html"],
+                    tunnelTimeout: 5,
+                    build: 'dev-ie-latest',
+                    concurrency: 3,
+                    browsers: browsers.ie,
+                    testname: "ie-latest mocha tests",
+                    tags: ["master"]
+                }
+            },
+            firefox: {
+                options: {
+                    urls: ["http://localhost:9000/test/mocha_test.html"],
+                    tunnelTimeout: 5,
+                    build: 'dev-firefox-latest',
+                    concurrency: 3,
+                    browsers: browsers.quick,
+                    testname: "firefox-latest mocha tests",
+                    tags: ["master"]
+                }
+            },
+            safari: {
+                options: {
+                    urls: ["http://localhost:9000/test/mocha_test.html"],
+                    tunnelTimeout: 5,
+                    build: 'dev-safari-latest',
+                    concurrency: 3,
+                    browsers: browsers.quick,
+                    testname: "safari-latest mocha tests",
+                    tags: ["master"]
+                }
+            },
             quick: {
                 options: {
                     urls: ["http://localhost:9000/test/mocha_test.html"],
                     tunnelTimeout: 5,
-                    build: process.env.TRAVIS_JOB_ID,
+                    build: 'dev-quick',
                     concurrency: 3,
                     browsers: browsers.quick,
                     testname: "mocha tests",
