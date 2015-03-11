@@ -61,6 +61,8 @@ module.exports = function (grunt) {
         ]
     };
 
+    var onTestComplete = require('saucelabs-mocha-reporter');
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jshint: {
@@ -102,7 +104,7 @@ module.exports = function (grunt) {
                     concurrency: 3,
                     browsers: browsers.ci,
                     testname: "ci mocha tests",
-                    tags: ["master"]
+                    onTestComplete: onTestComplete
                 }
             },
             chrome: {
@@ -113,7 +115,7 @@ module.exports = function (grunt) {
                     concurrency: 3,
                     browsers: browsers.chrome,
                     testname: "chrome-latest mocha tests",
-                    tags: ["master"]
+                    onTestComplete: onTestComplete
                 }
             },
             ie: {
@@ -124,7 +126,7 @@ module.exports = function (grunt) {
                     concurrency: 3,
                     browsers: browsers.ie,
                     testname: "ie-latest mocha tests",
-                    tags: ["master"]
+                    onTestComplete: onTestComplete
                 }
             },
             firefox: {
@@ -135,7 +137,7 @@ module.exports = function (grunt) {
                     concurrency: 3,
                     browsers: browsers.quick,
                     testname: "firefox-latest mocha tests",
-                    tags: ["master"]
+                    onTestComplete: onTestComplete
                 }
             },
             safari: {
@@ -146,7 +148,7 @@ module.exports = function (grunt) {
                     concurrency: 3,
                     browsers: browsers.quick,
                     testname: "safari-latest mocha tests",
-                    tags: ["master"]
+                    onTestComplete: onTestComplete
                 }
             },
             quick: {
@@ -157,7 +159,7 @@ module.exports = function (grunt) {
                     concurrency: 3,
                     browsers: browsers.quick,
                     testname: "mocha tests",
-                    tags: ["master"]
+                    onTestComplete: onTestComplete
                 }
             }
         }

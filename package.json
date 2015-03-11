@@ -24,10 +24,11 @@
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-watch": "~0.6.1",
     "grunt-mocha-phantomjs": "^0.6.1",
+    "grunt-saucelabs": "~8.6.0",
     "mocha": "^2.1.0",
     "mocha-phantomjs": "^3.5.3",
     "phantomjs": "^1.9.15",
-    "grunt-saucelabs": "~8.6.0"
+    "saucelabs-mocha-reporter": "git://github.com/tejacques/saucelabs-mocha-reporter"
   },
   "license": "Apache 2.0",
   "scripts": {

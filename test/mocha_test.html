@@ -28,16 +28,19 @@
                     var runner = mocha.run();
 
                     var allTests = [];
+                    var failedTests = [];
 
                     runner.on('end', function () {
                         window.mochaResults = runner.stats;
-                        window.mochaResults.reports = allTests;
+                        window.mochaResults.reports = failedTests;
+                        window.mochaResults.tests = allTests;
                     });
 
-                    runner.on('pass', logTest(true));
-                    runner.on('fail', logTest(false));
+                    runner.on('pass', logTest(true, allTests));
+                    runner.on('fail', logTest(false, allTests));
+                    runner.on('fail', logTest(false, failedTests));
 
-                    function logTest(result) {
+                    function logTest(result, tests) {
                         return function (test, err) {
 
                             var flattenTitles = function (test) {
@@ -52,7 +55,9 @@
                             var testResult = {
                                 name: test.title,
                                 result: result,
-                                titles: flattenTitles(test)
+                                titles: flattenTitles(test),
+                                speed: test.speed,
+                                duration: test.duration
                             };
 
                             if (err) {
@@ -60,7 +65,7 @@
                                 testResult.stack = err.stack;
                             }
 
-                            allTests.push(testResult);
+                            tests.push(testResult);
                         };
                     }
                 }
