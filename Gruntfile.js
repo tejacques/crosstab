@@ -1,69 +1,8 @@
 module.exports = function (grunt) {
-    var browsers = {
-        chrome: [
-           ['Linux', 'chrome', '40'],
-        ],
-        firefox: [
-           ['Linux', 'firefox', '35'],
-        ],
-        'ie8': [
-           ['Windows XP', 'internet explorer', '8'],
-        ],
-        'ie9': [
-           ['Windows 7', 'internet explorer', '9'],
-        ],
-        'ie10': [
-           ['Windows 7', 'internet explorer', '10'],
-        ],
-        'ie11': [
-           ['Windows 8.1', 'internet explorer', '11'],
-        ],
-        'ie': [
-           ['Windows 8.1', 'internet explorer', '11'],
-        ],
-        safari: [
-           ['OSX 10.10', 'safari', '8']
-        ],
-
-        quick: [
-           ['Windows 7', 'chrome', '40'],
-           ['Windows 7', 'firefox', '35'],
-           ['Windows 7', 'internet explorer', '11'],
-           ['OSX 10.10', 'safari', '8']
-        ],
-        ci: [
-           // Chrome
-           ['Linux', 'chrome', '40'],
-           ['OSX 10.10', 'chrome', '40'],
-           ['Windows XP', 'chrome', '40'],
-           ['Windows 7', 'chrome', '40'],
-           ['Windows 8', 'chrome', '40'],
-           ['Windows 8.1', 'chrome', '40'],
-           // Firefox
-           ['Linux', 'firefox', '35'],
-           ['OSX 10.10', 'firefox', '35'],
-           ['Windows XP', 'firefox', '35'],
-           ['Windows 7', 'firefox', '35'],
-           ['Windows 8', 'firefox', '35'],
-           ['Windows 8.1', 'firefox', '35'],
-           // Internet Explorer
-           // ['Windows XP', 'internet explorer', '8'], // Off for now
-           // ['Windows 7', 'internet explorer', '8'], // Off for now
-           ['Windows 7', 'internet explorer', '9'],
-           ['Windows 7', 'internet explorer', '10'],
-           ['Windows 7', 'internet explorer', '11'],
-           ['Windows 8.1', 'internet explorer', '11'],
-           // Safari
-           ['OSX 10.6', 'safari', '5.1'],
-           ['OSX 10.8', 'safari', '6'],
-           ['OSX 10.9', 'safari', '7'],
-           ['OSX 10.10', 'safari', '8']
-        ]
-    };
-
+    var browsers = require('./test/browsers');
     var onTestComplete = require('saucelabs-mocha-reporter');
 
-    grunt.initConfig({
+    var gruntConfig = {
         pkg: grunt.file.readJSON('package.json'),
         jshint: {
             files: ['Gruntfile.js', 'src/*.js', 'test/**.js'],
@@ -96,74 +35,27 @@ module.exports = function (grunt) {
             }
         },
         'saucelabs-mocha': {
-            ci: {
-                options: {
-                    urls: ["http://localhost:9000/test/mocha_test.html"],
-                    tunnelTimeout: 5,
-                    build: process.env.TRAVIS_JOB_ID,
-                    concurrency: 3,
-                    browsers: browsers.ci,
-                    testname: "ci mocha tests",
-                    onTestComplete: onTestComplete
-                }
-            },
-            chrome: {
-                options: {
-                    urls: ["http://localhost:9000/test/mocha_test.html"],
-                    tunnelTimeout: 5,
-                    build: 'dev-chrome-latest',
-                    concurrency: 3,
-                    browsers: browsers.chrome,
-                    testname: "chrome-latest mocha tests",
-                    onTestComplete: onTestComplete
-                }
-            },
-            ie: {
-                options: {
-                    urls: ["http://localhost:9000/test/mocha_test.html"],
-                    tunnelTimeout: 5,
-                    build: 'dev-ie-latest',
-                    concurrency: 3,
-                    browsers: browsers.ie,
-                    testname: "ie-latest mocha tests",
-                    onTestComplete: onTestComplete
-                }
-            },
-            firefox: {
-                options: {
-                    urls: ["http://localhost:9000/test/mocha_test.html"],
-                    tunnelTimeout: 5,
-                    build: 'dev-firefox-latest',
-                    concurrency: 3,
-                    browsers: browsers.firefox,
-                    testname: "firefox-latest mocha tests",
-                    onTestComplete: onTestComplete
-                }
-            },
-            safari: {
-                options: {
-                    urls: ["http://localhost:9000/test/mocha_test.html"],
-                    tunnelTimeout: 5,
-                    build: 'dev-safari-latest',
-                    concurrency: 3,
-                    browsers: browsers.safari,
-                    testname: "safari-latest mocha tests",
-                    onTestComplete: onTestComplete
-                }
-            },
-            quick: {
-                options: {
-                    urls: ["http://localhost:9000/test/mocha_test.html"],
-                    tunnelTimeout: 5,
-                    build: 'dev-quick',
-                    concurrency: 3,
-                    browsers: browsers.quick,
-                    testname: "mocha tests",
-                    onTestComplete: onTestComplete
-                }
-            }
+            // Settings programatically added below
         }
-    });
+    };
+
+    for (var browser in browsers) {
+        var taskBrowsers = browsers[browser];
+        gruntConfig['saucelabs-mocha'][browser] = {
+            options: {
+                urls: ["http://127.0.0.1:9000/test/mocha_test.html"],
+                tunnelTimeout: 5,
+                build: process.env.TRAVIS_JOB_ID,
+                concurrency: 3,
+                browsers: taskBrowsers,
+                testname: browser + ' mocha tests',
+                'pollInterval': 1000,
+                'max-duration': 60,
+                onTestComplete: onTestComplete
+            }
+        };
+    }
+    grunt.initConfig(gruntConfig);
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-watch');
