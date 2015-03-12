@@ -1,4 +1,8 @@
 module.exports = function (grunt) {
+    var fs = require('fs');
+    if (fs.existsSync('./env.js')) {
+        require("./.env.js");
+    }
     var browsers = require('./test/browsers');
     var onTestComplete = require('saucelabs-mocha-reporter');
 
@@ -46,6 +50,7 @@ module.exports = function (grunt) {
                 urls: ["http://127.0.0.1:9000/test/mocha_test.html"],
                 tunnelTimeout: 5,
                 build: process.env.TRAVIS_JOB_ID,
+                tags: [process.env.TRAVIS_PULL_REQUEST || process.env.TRAVIS_BRANCH],
                 concurrency: 3,
                 browsers: taskBrowsers,
                 testname: browser + ' mocha tests',
@@ -63,7 +68,20 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-saucelabs');
 
     grunt.registerTask('default', ['connect', 'watch']);
-    grunt.registerTask('test', ['connect', 'mocha_phantomjs']);
-    grunt.registerTask('test:ci', ['connect', 'mocha_phantomjs', 'saucelabs-mocha:ci']);
-    grunt.registerTask('sauce', ['connect', 'saucelabs-mocha:quick']);
+    grunt.registerTask('test', 'Run tests', function(type) {
+        if(!type) {
+            grunt.task.run(['connect', 'mocha_phantomjs']);
+        } else if (type === 'ci') {
+            grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
+        } else if (browsers[type]) {
+            grunt.task.run(['connect', 'saucelabs-mocha:' + type]);
+        } else {
+            // Error!
+            console.log("Couldn't find: " + type + " in browser config. Running phantomjs instead");
+            grunt.task.run(['connect', 'mocha_phantomjs']);
+        }
+    });
+    //grunt.registerTask('test', ['connect', 'mocha_phantomjs']);
+    //grunt.registerTask('test:ci', ['connect', 'mocha_phantomjs', 'saucelabs-mocha:ci']);
+    //grunt.registerTask('sauce', ['connect', 'saucelabs-mocha:quick']);
 };
