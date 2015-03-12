@@ -1,4 +1,6 @@
 describe('crosstab', function () {
+    this.timeout(5000);
+
     var runInIframe = function (iframe, fn) {
         /*jshint evil:true*/
         var args = [].slice.call(arguments, 2);
