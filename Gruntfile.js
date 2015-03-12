@@ -43,14 +43,29 @@ module.exports = function (grunt) {
         }
     };
 
+    var addTag = function(envVar) {
+        var ev = process.env[envVar];
+        if (ev && ev.length > 0) {
+            if (ev === 'false' || ev === 'true') {
+                if (ev === 'true') {
+                    tags.push(evnVar);
+                }
+            } else {
+                tags.push(ev);
+            }
+        }
+    };
+
     for (var browser in browsers) {
         var taskBrowsers = browsers[browser];
+        var tags = [];
+        ['TRAVIS', 'TRAVIS_PULL_REQUEST', 'TRAVIS_BRANCH'].forEach(addTag);
         gruntConfig['saucelabs-mocha'][browser] = {
             options: {
                 urls: ["http://127.0.0.1:9000/test/mocha_test.html"],
                 tunnelTimeout: 5,
                 build: process.env.TRAVIS_JOB_ID,
-                tags: [process.env.TRAVIS_PULL_REQUEST || process.env.TRAVIS_BRANCH],
+                tags: tags,
                 concurrency: 3,
                 browsers: taskBrowsers,
                 testname: browser + ' mocha tests',
@@ -81,7 +96,4 @@ module.exports = function (grunt) {
             grunt.task.run(['connect', 'mocha_phantomjs']);
         }
     });
-    //grunt.registerTask('test', ['connect', 'mocha_phantomjs']);
-    //grunt.registerTask('test:ci', ['connect', 'mocha_phantomjs', 'saucelabs-mocha:ci']);
-    //grunt.registerTask('sauce', ['connect', 'saucelabs-mocha:quick']);
 };
