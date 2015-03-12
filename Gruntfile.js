@@ -135,7 +135,7 @@ module.exports = function (grunt) {
                     tunnelTimeout: 5,
                     build: 'dev-firefox-latest',
                     concurrency: 3,
-                    browsers: browsers.quick,
+                    browsers: browsers.firefox,
                     testname: "firefox-latest mocha tests",
                     onTestComplete: onTestComplete
                 }
@@ -146,7 +146,7 @@ module.exports = function (grunt) {
                     tunnelTimeout: 5,
                     build: 'dev-safari-latest',
                     concurrency: 3,
-                    browsers: browsers.quick,
+                    browsers: browsers.safari,
                     testname: "safari-latest mocha tests",
                     onTestComplete: onTestComplete
                 }
