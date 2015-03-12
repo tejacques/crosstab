@@ -5,6 +5,8 @@ A utility library for cross-tab communication using localStorage.
 
 [![Build Status](https://travis-ci.org/tejacques/crosstab.svg?branch=master)](https://travis-ci.org/tejacques/crosstab)
 
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/crosstab.svg)](https://saucelabs.com/u/crosstab)
+
 How can I get it?
 -----------------
 
