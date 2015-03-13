@@ -399,6 +399,7 @@
         }
 
         var message = {
+            id: util.generateId(),
             event: event,
             data: data,
             destination: destination,
