@@ -14,6 +14,14 @@ var browsers = {
     'ie9': [
         ['Windows 7', 'internet explorer', '9'],
     ],
+    'ie9-multiple': [
+        ['Windows 7', 'internet explorer', '9'],
+        ['Windows 7', 'internet explorer', '9'],
+        ['Windows 7', 'internet explorer', '9'],
+        ['Windows 7', 'internet explorer', '9'],
+        ['Windows 7', 'internet explorer', '9'],
+        ['Windows 7', 'internet explorer', '9'],
+    ],
     'ie10': [
         ['Windows 7', 'internet explorer', '10'],
     ],
@@ -24,15 +32,15 @@ var browsers = {
         ['Windows 8.1', 'internet explorer', '11'],
     ],
     safari: [
-        ['OSX 10.10', 'safari', '8']
+        ['OSX 10.10', 'safari', '8'],
     ],
     opera: [
-        ['Linux', 'opera', '12.15']
+        ['Linux', 'opera', '12.15'],
     ],
     'opera-win': [
         // Testing Opera 12 is currently broken on sauce labs
-        //['Windows 7', 'opera', '12.12']
-        ['Windows 7', 'opera', '11.64']
+        //['Windows 7', 'opera', '12.12'],
+        ['Windows 7', 'opera', '11.64'],
     ],
 
     quick: [

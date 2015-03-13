@@ -1,5 +1,4 @@
 describe('crosstab', function () {
-    this.timeout(10000);
 
     var runInIframe = function (iframe, fn) {
         /*jshint evil:true*/
@@ -13,7 +12,8 @@ describe('crosstab', function () {
         var args = [].slice.call(arguments, 1);
         // create iframe
         var iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
+        //iframe.style.display = 'none';
+        iframe.style.border = 'none';
         iframe.id = (Math.random() * 0xFFFFFFFF) | 0;
         iframe.src = "/test/iframe.html";
 
@@ -31,6 +31,14 @@ describe('crosstab', function () {
                     onload.apply(crosstabScript, args);
                 };
                 document.head.appendChild(crosstabScript);
+
+                // addText helper function
+                window.addText = function (txt) {
+                    var div = document.createElement('div');
+                    var text = document.createTextNode(txt);
+                    div.appendChild(text);
+                    document.body.appendChild(div);
+                };
             }, onload, args);
         });
         document.body.appendChild(iframe);
@@ -38,7 +46,9 @@ describe('crosstab', function () {
     };
 
     var removeIframe = function (iframe) {
-        document.body.removeChild(iframe);
+        if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+        }
     };
 
     it ('should be a function', function () {
@@ -75,48 +85,60 @@ describe('crosstab', function () {
         expect(received).to.be(undefined);
     });
 
-    it('should receive broadcasts from other tabs', function (done) {
-        var msg = "OtherTabTestMessage";
-        var received;
-        crosstab.once('otherTabTest', function (message) {
-            received = message.data;
-            expect(received).to.be(msg);
+    describe('with iframe', function () {
+        this.timeout(20000);
+        var iframe;
+        afterEach(function () {
             removeIframe(iframe);
-            done();
         });
 
-        var iframe = runIframe(function (msg) {
-            crosstab(function () {
-                crosstab.broadcast('otherTabTest', msg);
+        it('should receive broadcasts from other tabs', function (done) {
+            var msg = "OtherTabTestMessage";
+            var received;
+            crosstab.once('otherTabTest', function (message) {
+                received = message.data;
+                expect(received).to.be(msg);
+                done();
             });
-        }, msg);
-    });
 
-    it ('should only receive one broadcast in an iframe per broadcast sent', function (done) {
-        var timeoutId;
-        var received = 0;
-
-        var checkReceived = function () {
-            expect(received).to.be(1);
-            removeIframe(iframe);
-            done();
-        };
-
-        crosstab.on('iframeBroadcastTestReady', function () {
-            crosstab.broadcast('iframeBroadcastTestStart');
+            iframe = runIframe(function (msg) {
+                addText('iFrame loaded');
+                crosstab(function () {
+                    addText('crosstab setup complete');
+                    crosstab.broadcast('otherTabTest', msg);
+                });
+            }, msg);
         });
 
-        crosstab.on('iframeBroadcastTest', function (message) {
-            received++;
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(checkReceived, 50);
-        });
+        it('should only receive one broadcast in an iframe per broadcast sent', function (done) {
+            var timeoutId;
+            var received = 0;
 
-        var iframe = runIframe(function (msg) {
-            crosstab(function () {
-                crosstab.broadcast('iframeBroadcastTestReady');
-                crosstab.on('iframeBroadcastTestStart', function () {
-                    crosstab.broadcast('iframeBroadcastTest');
+            var checkReceived = function () {
+                expect(received).to.be(1);
+                done();
+            };
+
+            crosstab.on('iframeBroadcastTestReady', function () {
+                crosstab.broadcast('iframeBroadcastTestStart');
+            });
+
+            crosstab.on('iframeBroadcastTest', function (message) {
+                received++;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(checkReceived, 50);
+            });
+
+            iframe = runIframe(function (msg) {
+                addText('iFrame loaded');
+
+                crosstab(function () {
+                    addText('crosstab setup complete');
+                    crosstab.broadcast('iframeBroadcastTestReady');
+                    crosstab.on('iframeBroadcastTestStart', function () {
+                        console.log('starting broadcast test in iframe')
+                        crosstab.broadcast('iframeBroadcastTest');
+                    });
                 });
             });
         });

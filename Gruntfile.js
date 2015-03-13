@@ -1,10 +1,12 @@
 module.exports = function (grunt) {
     var fs = require('fs');
-    if (fs.existsSync('./env.js')) {
-        require("./.env.js");
+    var envPath = './.env.js';
+    if (fs.existsSync(envPath)) {
+        console.log("Adding environment variables");
+        require(envPath);
     }
     var browsers = require('./test/browsers');
-    var onTestComplete = require('saucelabs-mocha-reporter');
+    var reporter = require('saucelabs-mocha-reporter');
 
     var gruntConfig = {
         pkg: grunt.file.readJSON('package.json'),
@@ -56,6 +58,7 @@ module.exports = function (grunt) {
         }
     };
 
+    var onTestComplete;
     for (var browser in browsers) {
         var taskBrowsers = browsers[browser];
         var tags = [];
@@ -70,8 +73,7 @@ module.exports = function (grunt) {
                 browsers: taskBrowsers,
                 testname: browser + ' mocha tests',
                 'pollInterval': 1000,
-                'max-duration': 60,
-                onTestComplete: onTestComplete
+                'max-duration': 60
             }
         };
     }
@@ -83,13 +85,20 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-saucelabs');
 
     grunt.registerTask('default', ['connect', 'watch']);
-    grunt.registerTask('test', 'Run tests', function(type) {
+    grunt.registerTask('test', 'Run tests', function (type, useTests) {
         if(!type) {
             grunt.task.run(['connect', 'mocha_phantomjs']);
-        } else if (type === 'ci') {
-            grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
         } else if (browsers[type]) {
-            grunt.task.run(['connect', 'saucelabs-mocha:' + type]);
+            if (useTests !== undefined) {
+                useTests = JSON.parse(useTests);
+                gruntConfig['saucelabs-mocha'][type].options.onTestComplete = reporter.create(useTests);
+            }
+            if (type === 'ci') {
+                gruntConfig['saucelabs-mocha'][type].options.maxRetries = 1; // Some tests fail due to issues on Sauce Labs' end, retry once to be safe.
+                grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
+            } else {
+                grunt.task.run(['connect', 'saucelabs-mocha:' + type]);
+            }
         } else {
             // Error!
             console.log("Couldn't find: " + type + " in browser config. Running phantomjs instead");
