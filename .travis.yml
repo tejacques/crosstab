@@ -3,4 +3,4 @@ node_js:
 - '0.12'
 before_install: npm install -g grunt-cli
 script:
-  - '([ "${SAUCE_USERNAME}" ] && [ "${SAUCE_ACCESS_KEY}" ] && grunt test:ci) || ([ -z "${SAUCE_USERNAME}" ] || -z [ "${SAUCE_ACCESS_KEY}" ] && grunt test)'
+  - 'if [ "${SAUCE_USERNAME}" ] && [ "${SAUCE_ACCESS_KEY}" ]; then grunt test:ci; else grunt test; fi'
