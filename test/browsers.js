@@ -5,6 +5,9 @@ var browsers = {
     firefox: [
         ['Linux', 'firefox', '35'],
     ],
+    'firefox-osx': [
+        ['OSX 10.10', 'firefox', '35'],
+    ],
     'ie8': [
         ['Windows XP', 'internet explorer', '8'],
     ],

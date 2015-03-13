@@ -37,12 +37,9 @@
                         window.mochaResults = results;
                     });
 
-                    runner.on('pass', logTest(true, allTests));
-                    runner.on('fail', logTest(false, allTests));
-                    runner.on('fail', logTest(false, failedTests));
-
-                    function logTest(result, tests) {
+                    var logTest = function (result, tests) {
                         return function (test, err) {
+                            console.log("in logTest");
 
                             var flattenTitles = function (test) {
                                 var titles = [];
@@ -68,7 +65,11 @@
 
                             tests.push(testResult);
                         };
-                    }
+                    };
+
+                    runner.on('pass', logTest(true, allTests));
+                    runner.on('fail', logTest(false, allTests));
+                    runner.on('fail', logTest(false, failedTests));
                 }
             };
         </script>
