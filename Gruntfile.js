@@ -48,7 +48,7 @@ module.exports = function (grunt) {
         if (ev && ev.length > 0) {
             if (ev === 'false' || ev === 'true') {
                 if (ev === 'true') {
-                    tags.push(evnVar);
+                    tags.push(envVar);
                 }
             } else {
                 tags.push(ev);
