@@ -93,20 +93,26 @@ describe('crosstab', function () {
         });
 
         it('should have crosstab.supported be true', function (done) {
-            window.callback = function() {
+            window.callback = function () {
                 expect(crosstab.supported).to.be(true);
                 done();
             };
+
             iframe = runIframe(function () {
                 addText('iFrame loaded');
                 crosstab(function () {
                     addText('crosstab setup complete');
-                    setTimeout(window.parent.callback);
+                    window.parent.setTimeout(window.parent.callback);
                 });
             });
         });
 
         it('should receive broadcasts from other tabs', function (done) {
+            window.callback = function () {
+                expect(crosstab.supported).to.be(true);
+                done();
+            };
+
             var msg = "OtherTabTestMessage";
             var received;
             crosstab.once('otherTabTest', function (message) {
@@ -119,6 +125,7 @@ describe('crosstab', function () {
                 addText('iFrame loaded');
                 crosstab(function () {
                     addText('crosstab setup complete');
+                    window.parent.setTimeout(window.parent.callback);
                     crosstab.broadcast('otherTabTest', msg);
                 });
             }, msg);
@@ -127,6 +134,11 @@ describe('crosstab', function () {
         it('should only receive one broadcast in an iframe per broadcast sent', function (done) {
             var timeoutId;
             var received = 0;
+
+            window.callback = function () {
+                expect(crosstab.supported).to.be(true);
+                done();
+            };
 
             var checkReceived = function () {
                 expect(received).to.be(1);
@@ -144,6 +156,7 @@ describe('crosstab', function () {
 
                 crosstab(function () {
                     addText('crosstab setup complete');
+                    window.parent.setTimeout(window.parent.callback);
                     crosstab.on('iframeBroadcastTestStart', function () {
                         addText('starting broadcast test in iframe');
                         crosstab.broadcast('iframeBroadcastTest');

@@ -484,7 +484,7 @@
     // 5 second timeout
     var TAB_TIMEOUT = 5 * 1000;
     // 100 ms ping timeout
-    var PING_TIMEOUT = 300;
+    var PING_TIMEOUT = 500;
 
     function getStoredTabs() {
         var storedTabs = getLocalStorageItem(util.keys.TABS_KEY);
