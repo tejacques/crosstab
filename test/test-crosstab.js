@@ -86,10 +86,24 @@ describe('crosstab', function () {
     });
 
     describe('with iframe', function () {
-        this.timeout(20000);
+        this.timeout(3000);
         var iframe;
         afterEach(function () {
             removeIframe(iframe);
+        });
+
+        it('should have crosstab.supported be true', function (done) {
+            window.callback = function() {
+                expect(crosstab.supported).to.be(true);
+                done();
+            };
+            iframe = runIframe(function () {
+                addText('iFrame loaded');
+                crosstab(function () {
+                    addText('crosstab setup complete');
+                    setTimeout(window.parent.callback);
+                });
+            });
         });
 
         it('should receive broadcasts from other tabs', function (done) {
@@ -119,10 +133,6 @@ describe('crosstab', function () {
                 done();
             };
 
-            crosstab.on('iframeBroadcastTestReady', function () {
-                crosstab.broadcast('iframeBroadcastTestStart');
-            });
-
             crosstab.on('iframeBroadcastTest', function (message) {
                 received++;
                 clearTimeout(timeoutId);
@@ -134,11 +144,12 @@ describe('crosstab', function () {
 
                 crosstab(function () {
                     addText('crosstab setup complete');
-                    crosstab.broadcast('iframeBroadcastTestReady');
                     crosstab.on('iframeBroadcastTestStart', function () {
-                        console.log('starting broadcast test in iframe')
+                        addText('starting broadcast test in iframe');
                         crosstab.broadcast('iframeBroadcastTest');
                     });
+                    addText('telling iframe to start test');
+                    window.top.crosstab.broadcast('iframeBroadcastTestStart');
                 });
             });
         });

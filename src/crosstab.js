@@ -26,6 +26,7 @@
     var frozenTabEnvironment = false;
 
     function notSupported() {
+        if (crosstab.supported) return;
         var errorMsg = 'crosstab not supported';
         var reasons = [];
         if (!localStorage) {
@@ -221,6 +222,7 @@
     var lastOldValue;
     function onStorageEvent(event) {
         var eventValue;
+        var wasSupported = crosstab.supported;
         try {
             eventValue = event.newValue ? JSON.parse(event.newValue) : {};
         } catch (e) {
@@ -242,6 +244,13 @@
             if (!message.destination || message.destination === crosstab.id) {
                 eventHandler.emit(message.event, message);
             }
+        } else if (event.key === util.keys.FROZEN_TAB_ENVIRONMENT) {
+            frozenTabEnvironment = eventValue.data;
+            crosstab.supported = crosstab.supported && !eventValue.data;
+            //if (wasSupported) notSupported();
+        } else if (event.key === util.keys.SUPPORTED_KEY) {
+            crosstab.supported = crosstab.supported && eventValue.data;
+            //if(wasSupported) notSupported();
         }
     }
 
@@ -475,7 +484,7 @@
     // 5 second timeout
     var TAB_TIMEOUT = 5 * 1000;
     // 100 ms ping timeout
-    var PING_TIMEOUT = 100;
+    var PING_TIMEOUT = 300;
 
     function getStoredTabs() {
         var storedTabs = getLocalStorageItem(util.keys.TABS_KEY);
@@ -567,7 +576,7 @@
     }
 
     function keepaliveLoop() {
-        if (!crosstab.stopKeepalive) {
+        if (crosstab.supported && !crosstab.stopKeepalive) {
             keepalive();
             window.setTimeout(keepaliveLoop, TAB_KEEPALIVE);
         }

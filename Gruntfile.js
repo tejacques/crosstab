@@ -85,16 +85,13 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-saucelabs');
 
     grunt.registerTask('default', ['connect', 'watch']);
-    grunt.registerTask('test', 'Run tests', function (type, useTests) {
+    grunt.registerTask('test', 'Run tests', function (type, testType) {
         if(!type) {
             grunt.task.run(['connect', 'mocha_phantomjs']);
         } else if (browsers[type]) {
-            if (useTests !== undefined) {
-                useTests = JSON.parse(useTests);
-                gruntConfig['saucelabs-mocha'][type].options.onTestComplete = reporter.create(useTests);
-            }
+            var useTests = JSON.parse(testType || null);
+            gruntConfig['saucelabs-mocha'][type].options.onTestComplete = reporter.create(useTests);
             if (type === 'ci') {
-                gruntConfig['saucelabs-mocha'][type].options.maxRetries = 1; // Some tests fail due to issues on Sauce Labs' end, retry once to be safe.
                 grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
             } else {
                 grunt.task.run(['connect', 'saucelabs-mocha:' + type]);
