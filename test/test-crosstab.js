@@ -110,7 +110,6 @@ describe('crosstab', function () {
         it('should receive broadcasts from other tabs', function (done) {
             window.callback = function () {
                 expect(crosstab.supported).to.be(true);
-                done();
             };
 
             var msg = "OtherTabTestMessage";
@@ -137,7 +136,6 @@ describe('crosstab', function () {
 
             window.callback = function () {
                 expect(crosstab.supported).to.be(true);
-                done();
             };
 
             var checkReceived = function () {
