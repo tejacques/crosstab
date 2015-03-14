@@ -92,6 +92,7 @@ module.exports = function (grunt) {
             var useTests = JSON.parse(testType || null);
             gruntConfig['saucelabs-mocha'][type].options.onTestComplete = reporter.create(useTests);
             if (type === 'ci') {
+                gruntConfig['saucelabs-mocha'][type].options['max-duration'] = 600;
                 grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
             } else {
                 grunt.task.run(['connect', 'saucelabs-mocha:' + type]);
