@@ -85,7 +85,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-saucelabs');
 
     grunt.registerTask('default', ['connect', 'watch']);
-    grunt.registerTask('test', 'Run tests', function (type, testType) {
+    grunt.registerTask('test', 'Run tests', function (type, testType, multiple) {
         if(!type) {
             grunt.task.run(['connect', 'mocha_phantomjs']);
         } else if (browsers[type]) {
@@ -96,6 +96,15 @@ module.exports = function (grunt) {
                 gruntConfig['saucelabs-mocha'][type].options['max-duration'] = 600;
                 grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
             } else {
+                multiple = parseInt(multiple);
+                if (multiple > 0) {
+                    var browserList = [];
+                    var configOptions = gruntConfig['saucelabs-mocha'][type].options;
+                    for(var i = 0; i < multiple; i++) {
+                        browserList.push.apply(browserList, configOptions.browsers);
+                    }
+                    configOptions.browsers = browserList;
+                }
                 grunt.task.run(['connect', 'saucelabs-mocha:' + type]);
             }
         } else {

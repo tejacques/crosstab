@@ -2,24 +2,25 @@ var browsers = {
     chrome: [
         ['Linux', 'chrome', '40'],
     ],
+    'chrome-osx': [
+        ['OSX 10.10', 'chrome', '40'],
+    ],
+    'chrome-win': [
+        ['Windows 7', 'chrome', '40'],
+    ],
     firefox: [
         ['Linux', 'firefox', '35'],
     ],
     'firefox-osx': [
         ['OSX 10.10', 'firefox', '35'],
     ],
+    'firefox-win': [
+        ['Windows 7', 'firefox', '35'],
+    ],
     'ie8': [
         ['Windows XP', 'internet explorer', '8'],
     ],
     'ie9': [
-        ['Windows 7', 'internet explorer', '9'],
-    ],
-    'ie9-multiple': [
-        ['Windows 7', 'internet explorer', '9'],
-        ['Windows 7', 'internet explorer', '9'],
-        ['Windows 7', 'internet explorer', '9'],
-        ['Windows 7', 'internet explorer', '9'],
-        ['Windows 7', 'internet explorer', '9'],
         ['Windows 7', 'internet explorer', '9'],
     ],
     'ie10': [
