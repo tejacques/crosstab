@@ -42,57 +42,61 @@ var iframeLoadCrosstab = function (iframe) {
                     loaded[i]();
                 }
             };
-            document.head.appendChild(crosstabScript);
 
-            // addText helper function
-            window.addText = function (txt) {
-                var div = document.createElement('div');
-                var text = document.createTextNode(txt);
-                div.appendChild(text);
-                document.body.appendChild(div);
-            };
-
-            window.loaded = [];
             addText('iframe loaded');
-            var start = (+new Date());
-            window.loaded.push(function () {
-                var end;
-                end = +new Date();
-                addText('crosstab script loaded in ' + (end - start) + 'ms');
-                start = end;
-                crosstab(function () {
-                    end = +new Date();
-                    addText('crosstab script setup in ' + (end - start) + 'ms');
-                });
-            });
+            document.head.appendChild(crosstabScript);
         });
     };
 
-    if (iframe.contentWindow.document.readyState === 'complete') {
+    runInIframe(iframe, function () {
+        // addText helper function
+        window.addText = function (txt) {
+            var div = document.createElement('div');
+            var text = document.createTextNode(txt);
+            div.appendChild(text);
+            document.body.appendChild(div);
+        };
+
+        window.loaded = [];
+        var start = (+new Date());
+        window.loaded.push(function () {
+            var end;
+            end = +new Date();
+            addText('crosstab script loaded in ' + (end - start) + 'ms');
+            start = end;
+            crosstab(function () {
+                end = +new Date();
+                addText('crosstab script setup in ' + (end - start) + 'ms');
+            });
+        });
+
+    });
+
+    if (false && iframe.contentWindow.document.readyState === 'complete') {
         doOnload();
     } else {
         iframe.addEventListener('load', doOnload);
     }
 };
 
-var iframeOnload = function (iframe, onload) {
+var iframeOnload = function (iframe, fn) {
     var args = [].slice.call(arguments, 2);
-    onload = onload.toString();
+    fn = fn.toString();
 
     var doOnload = function () {
         // add crosstab script
-        runInIframe(iframe, function (onload, args) {
+        runInIframe(iframe, function (fn, args) {
             /*jshint evil:true*/
-            onload = Function('return ' + onload + ';')();
+            fn = Function('return ' + fn + ';')();
 
             window.loaded.push(function () {
-                onload.apply(null, args);
+                fn.apply(null, args);
             });
-        }, onload, args);
+        }, fn, args);
     };
 
     if (iframe.contentWindow.document.readyState === 'complete') {
-        setTimeout(doOnload, 50);
+        doOnload();
     } else {
         iframe.addEventListener('load', doOnload);
     }
