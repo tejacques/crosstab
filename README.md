@@ -1,11 +1,8 @@
-crosstab
-========
+# crosstab [![NPM version][npm-img]][npm-url] [![Build Status][travis-img]][travis-url]
 
 A utility library for cross-tab communication using localStorage.
 
-[![Build Status](https://travis-ci.org/tejacques/crosstab.svg?branch=master)](https://travis-ci.org/tejacques/crosstab)
-
-[![Sauce Test Status](https://saucelabs.com/browser-matrix/crosstab.svg)](https://saucelabs.com/u/crosstab)
+[![Sauce Labs Test Status][saucelabs-img]][saucelabs-url]
 
 How can I get it?
 -----------------
@@ -94,3 +91,11 @@ I wanted to be able to have robust cross tab communication for the purpose of re
 * intercom.js leaks memory by maintaining a state of every message id received (also in an attempt to support IE8)
 
 crosstab solves these issues by dropping support for IE8 and using a lockless system that is entirely event driven (IE8 cannot pass messages via localStorage events, which is why intercom.js requires locking, because it supports IE8).
+
+[downloads-img]: https://img.shields.io/npm/dm/crosstab.svg
+[npm-url]: https://npmjs.org/package/crosstab
+[npm-img]: http://img.shields.io/npm/v/crosstab.svg
+[travis-url]: https://travis-ci.org/tejacques/crosstab
+[travis-img]: https://travis-ci.org/tejacques/crosstab.svg?branch=master
+[saucelabs-url]: https://saucelabs.com/users/crosstab/tests
+[saucelabs-img]: https://saucelabs.com/browser-matrix/crosstab.svg
