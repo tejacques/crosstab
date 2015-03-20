@@ -19,87 +19,52 @@ var runIframe = function (onload) {
     iframe.style.border = 'none';
     iframe.id = (Math.random() * 0xFFFFFFFF) | 0;
     iframe.src = "/test/iframe.html";
-    document.body.appendChild(iframe);
-    iframeLoadCrosstab(iframe);
-    iframeOnload.apply(null, allArgs);
-    return iframe;
-};
 
-var iframeLoadCrosstab = function (iframe) {
-    var doOnload = function () {
-        runInIframe(iframe, function () {
-            var crosstabScript = document.createElement('script');
-            crosstabScript.type = 'text/javascript';
-            crosstabScript.src = '/src/crosstab.js';
-            crosstabScript.onload = function () {
-                var loaded = window.loaded || [];
-                window.loaded = {
-                    push: function (fn) {
-                        fn();
-                    }
-                };
-                for (var i = 0; i < loaded.length; i++) {
-                    loaded[i]();
-                }
-            };
+    iframe.onloadqueue = [];
+    iframe.run = function (fn) {
+        var args = [].slice.call(arguments, 1);
+        fn = fn.toString();
 
-            addText('iframe loaded');
-            document.head.appendChild(crosstabScript);
-        });
-    };
-
-    runInIframe(iframe, function () {
-        // addText helper function
-        window.addText = function (txt) {
-            var div = document.createElement('div');
-            var text = document.createTextNode(txt);
-            div.appendChild(text);
-            document.body.appendChild(div);
-        };
-
-        window.loaded = [];
-        var start = (+new Date());
-        window.loaded.push(function () {
-            var end;
-            end = +new Date();
-            addText('crosstab script loaded in ' + (end - start) + 'ms');
-            start = end;
-            crosstab(function () {
-                end = +new Date();
-                addText('crosstab script setup in ' + (end - start) + 'ms');
-            });
-        });
-
-    });
-
-    if (false && iframe.contentWindow.document.readyState === 'complete') {
-        doOnload();
-    } else {
-        iframe.addEventListener('load', doOnload);
-    }
-};
-
-var iframeOnload = function (iframe, fn) {
-    var args = [].slice.call(arguments, 2);
-    fn = fn.toString();
-
-    var doOnload = function () {
-        // add crosstab script
         runInIframe(iframe, function (fn, args) {
             /*jshint evil:true*/
             fn = Function('return ' + fn + ';')();
-
-            window.loaded.push(function () {
-                fn.apply(null, args);
-            });
+            fn.apply(null, args);
         }, fn, args);
     };
+    iframe.onloadqueue.push(onload);
 
-    if (iframe.contentWindow.document.readyState === 'complete') {
-        doOnload();
-    } else {
-        iframe.addEventListener('load', doOnload);
-    }
+    crosstabOnload = function () {
+        for (var i = 0; i < iframe.onloadqueue.length; i++) {
+            var fn = iframe.onloadqueue[i];
+            iframe.run(fn);
+        }
+        iframe.onloadqueue = {
+            push: iframe.run
+        };
+    };
+
+    iframe.onload = function () {
+        iframe.run(function () {
+            // addText helper function
+            window.addText = function (txt) {
+                var div = document.createElement('div');
+                var text = document.createTextNode(txt);
+                div.appendChild(text);
+                document.body.appendChild(div);
+            };
+
+            addText('iframe loaded');
+        });
+        var crosstabScript = document.createElement('script');
+        crosstabScript.type = 'text/javascript';
+        crosstabScript.src = '/src/crosstab.js';
+        crosstabScript.onload = crosstabOnload;
+
+        iframe.contentWindow.document.head.appendChild(crosstabScript);
+    };
+
+    document.body.appendChild(iframe);
+    return iframe;
 };
 
 var removeIframe = function (iframe) {
@@ -171,7 +136,7 @@ describe('crosstab', function () {
                 done();
             };
 
-            iframeOnload(iframe, function () {
+            iframe.run(function () {
                 crosstab(function () {
                     window.parent.setTimeout(window.parent.callback);
                 });
@@ -191,7 +156,7 @@ describe('crosstab', function () {
                 done();
             });
 
-            iframeOnload(iframe, function (msg) {
+            iframe.run(function (msg) {
                 crosstab(function () {
                     window.parent.setTimeout(window.parent.callback);
                     crosstab.broadcast('otherTabTest', msg);
@@ -218,7 +183,7 @@ describe('crosstab', function () {
                 timeoutId = setTimeout(checkReceived, 50);
             });
 
-            iframeOnload(iframe, function () {
+            iframe.run(function () {
                 crosstab(function () {
                     window.parent.setTimeout(window.parent.callback);
                     crosstab.on('iframeBroadcastTestStart', function () {
