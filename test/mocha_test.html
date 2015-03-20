@@ -19,11 +19,58 @@
         <script src="/src/crosstab.js"></script>
         <script id="crosstab" src="/test/test-crosstab.js"></script>
         <script>
-          if (window.mochaPhantomJS) {
-            mochaPhantomJS.run();
-          } else {
-            mocha.run();
-          }
+            onload = function(){
+                if (window.mochaPhantomJS) {
+                    mochaPhantomJS.run();
+                } else {
+                    //mocha.checkLeaks();
+                    //mocha.globals(['foo']);
+                    var runner = mocha.run();
+
+                    var allTests = [];
+                    var failedTests = [];
+
+                    runner.on('end', function () {
+                        var results = runner.stats;
+                        results.reports = failedTests;
+                        results.tests = allTests;
+                        window.mochaResults = results;
+                    });
+
+                    var logTest = function (result, tests) {
+                        return function (test, err) {
+
+                            var flattenTitles = function (test) {
+                                var titles = [];
+                                while (test.parent.title) {
+                                    titles.push(test.parent.title);
+                                    test = test.parent;
+                                }
+                                return titles.reverse();
+                            };
+
+                            var testResult = {
+                                name: test.title,
+                                result: result,
+                                titles: flattenTitles(test),
+                                speed: test.speed,
+                                duration: test.duration
+                            };
+
+                            if (err) {
+                                testResult.message = err.message;
+                                testResult.stack = err.stack;
+                            }
+
+                            tests.push(testResult);
+                        };
+                    };
+
+                    runner.on('pass', logTest(true, allTests));
+                    runner.on('fail', logTest(false, allTests));
+                    runner.on('fail', logTest(false, failedTests));
+                }
+            };
         </script>
     </body>
 </html>

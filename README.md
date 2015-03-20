@@ -69,6 +69,7 @@ The messages received by events have the following format:
 
 ```JavaScript
 var message = {
+    id: util.generateId(),    // The unique ID of this message
     event: event,             // The name of the event
     data: data,               // The data to pass
     destination: destination, // The destination tab

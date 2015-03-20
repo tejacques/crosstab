@@ -1,43 +1,81 @@
-describe('crosstab', function () {
-    var runInIframe = function (iframe, fn) {
-        /*jshint evil:true*/
-        var args = [].slice.call(arguments, 2);
-        return iframe.contentWindow.window.eval("("
-            + fn
-            + ").apply(window, " + JSON.stringify(args) + ");");
-    };
+// =========== Iframe Tools ==============
 
-    var runIframe = function (onload) {
+var runInIframe = function (iframe, fn) {
+    /*jshint evil:true*/
+    var args = [].slice.call(arguments, 2);
+    return iframe.contentWindow.window.eval("("
+        + fn
+        + ").apply(window, " + JSON.stringify(args) + ");");
+};
+
+var runIframe = function (onload) {
+    // create iframe
+    var iframe = document.createElement('iframe');
+
+    var allArgs = [iframe];
+    var args = [].slice.call(arguments);
+    allArgs.push.apply(allArgs, args);
+    //iframe.style.display = 'none';
+    iframe.style.border = 'none';
+    iframe.id = (Math.random() * 0xFFFFFFFF) | 0;
+    iframe.src = "/test/iframe.html";
+
+    iframe.onloadqueue = [];
+    iframe.run = function (fn) {
         var args = [].slice.call(arguments, 1);
-        // create iframe
-        var iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.id = (Math.random() * 0xFFFFFFFF) | 0;
-        iframe.src = "/test/iframe.html";
+        fn = fn.toString();
 
-        onload = onload.toString();
+        runInIframe(iframe, function (fn, args) {
+            /*jshint evil:true*/
+            fn = Function('return ' + fn + ';')();
+            fn.apply(null, args);
+        }, fn, args);
+    };
+    iframe.onloadqueue.push(onload);
 
-        iframe.addEventListener('load', function () {
-            // add crosstab script
-            runInIframe(iframe, function (onload, args) {
-                /*jshint evil:true*/
-                onload = Function('return ' + onload + ';')();
-                var crosstabScript = document.createElement('script');
-                crosstabScript.type = 'text/javascript';
-                crosstabScript.src = '/src/crosstab.js';
-                crosstabScript.onload = function () {
-                    onload.apply(crosstabScript, args);
-                };
-                document.head.appendChild(crosstabScript);
-            }, onload, args);
+    crosstabOnload = function () {
+        for (var i = 0; i < iframe.onloadqueue.length; i++) {
+            var fn = iframe.onloadqueue[i];
+            iframe.run(fn);
+        }
+        iframe.onloadqueue = {
+            push: iframe.run
+        };
+    };
+
+    iframe.onload = function () {
+        iframe.run(function () {
+            // addText helper function
+            window.addText = function (txt) {
+                var div = document.createElement('div');
+                var text = document.createTextNode(txt);
+                div.appendChild(text);
+                document.body.appendChild(div);
+            };
+
+            addText('iframe loaded');
         });
-        document.body.appendChild(iframe);
-        return iframe;
+        var crosstabScript = document.createElement('script');
+        crosstabScript.type = 'text/javascript';
+        crosstabScript.src = '/src/crosstab.js';
+        crosstabScript.onload = crosstabOnload;
+
+        iframe.contentWindow.document.head.appendChild(crosstabScript);
     };
 
-    var removeIframe = function (iframe) {
+    document.body.appendChild(iframe);
+    return iframe;
+};
+
+var removeIframe = function (iframe) {
+    if (document.body.contains(iframe)) {
         document.body.removeChild(iframe);
-    };
+    }
+};
+
+// =========== Tests ==============
+
+describe('crosstab', function () {
 
     it ('should be a function', function () {
         expect(window.crosstab).to.be.a('function');
@@ -73,48 +111,87 @@ describe('crosstab', function () {
         expect(received).to.be(undefined);
     });
 
-    it('should receive broadcasts from other tabs', function (done) {
-        var msg = "OtherTabTestMessage";
-        var received;
-        crosstab.once('otherTabTest', function (message) {
-            received = message.data;
-            expect(received).to.be(msg);
-            removeIframe(iframe);
-            done();
-        });
+    describe('with iframe', function () {
+        this.timeout(1000);
+        var iframe;
 
-        var iframe = runIframe(function (msg) {
-            crosstab(function () {
-                crosstab.broadcast('otherTabTest', msg);
+        beforeEach(function (done) {
+            this.timeout(10000);
+            window.done = done;
+            iframe = runIframe(function () {
+                crosstab(function () {
+                    addText('crosstab setup complete');
+                });
+                window.parent.done();
             });
-        }, msg);
-    });
-
-    it ('should only receive one broadcast in an iframe per broadcast sent', function (done) {
-        var timeoutId;
-        var received = 0;
-
-        var checkReceived = function () {
-            expect(received).to.be(1);
-            removeIframe(iframe);
-            done();
-        };
-
-        crosstab.on('iframeBroadcastTestReady', function () {
-            crosstab.broadcast('iframeBroadcastTestStart');
         });
 
-        crosstab.on('iframeBroadcastTest', function (message) {
-            received++;
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(checkReceived, 50);
+        afterEach(function () {
+            //removeIframe(iframe);
         });
 
-        var iframe = runIframe(function (msg) {
-            crosstab(function () {
-                crosstab.broadcast('iframeBroadcastTestReady');
-                crosstab.on('iframeBroadcastTestStart', function () {
-                    crosstab.broadcast('iframeBroadcastTest');
+        it('should have crosstab.supported be true', function (done) {
+            window.callback = function () {
+                expect(crosstab.supported).to.be(true);
+                done();
+            };
+
+            iframe.run(function () {
+                crosstab(function () {
+                    window.parent.setTimeout(window.parent.callback);
+                });
+            });
+        });
+
+        it('should receive broadcasts from other tabs', function (done) {
+            window.callback = function () {
+                expect(crosstab.supported).to.be(true);
+            };
+
+            var msg = "OtherTabTestMessage";
+            var received;
+            crosstab.once('otherTabTest', function (message) {
+                received = message.data;
+                expect(received).to.be(msg);
+                done();
+            });
+
+            iframe.run(function (msg) {
+                crosstab(function () {
+                    window.parent.setTimeout(window.parent.callback);
+                    crosstab.broadcast('otherTabTest', msg);
+                });
+            }, msg);
+        });
+
+        it('should only receive one broadcast in an iframe per broadcast sent', function (done) {
+            var timeoutId;
+            var received = 0;
+
+            window.callback = function () {
+                expect(crosstab.supported).to.be(true);
+            };
+
+            var checkReceived = function () {
+                expect(received).to.be(1);
+                done();
+            };
+
+            crosstab.on('iframeBroadcastTest', function (message) {
+                received++;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(checkReceived, 50);
+            });
+
+            iframe.run(function () {
+                crosstab(function () {
+                    window.parent.setTimeout(window.parent.callback);
+                    crosstab.on('iframeBroadcastTestStart', function () {
+                        addText('starting broadcast test in iframe');
+                        crosstab.broadcast('iframeBroadcastTest');
+                    });
+                    addText('telling iframe to start test');
+                    window.top.crosstab.broadcast('iframeBroadcastTestStart');
                 });
             });
         });
