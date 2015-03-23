@@ -1,5 +1,5 @@
 /*!
- * crosstab JavaScript Library v0.2.3
+ * crosstab JavaScript Library v0.2.4
  * https://github.com/tejacques/crosstab
  *
  * License: Apache 2.0 https://github.com/tejacques/crosstab/blob/master/LICENSE
