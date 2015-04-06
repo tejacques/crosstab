@@ -22,6 +22,19 @@
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1028153
     }
 
+    // When Safari on OS X or iOS is in private browsing mode,
+    // calling localStorage.setItem throws an exception.
+    //
+    // "QUOTA_EXCEEDED_ERR: DOM Exception 22: An attempt was made
+    // to add something to storage that exceeded the quota."
+    var setItemAllowed = true;
+    try {
+        localStorage.setItem('__crosstab', '');
+        localStorage.removeItem('__crosstab');
+    } catch (e) {
+        setItemAllowed = false;
+    }
+
     // Other reasons
     var frozenTabEnvironment = false;
 
@@ -446,7 +459,7 @@
     };
 
     crosstab.id = util.generateId();
-    crosstab.supported = !!localStorage && window.addEventListener && !isMobile;
+    crosstab.supported = !!localStorage && window.addEventListener && !isMobile && setItemAllowed;
     crosstab.util = util;
     crosstab.broadcast = broadcast;
     crosstab.broadcastMaster = broadcastMaster;
@@ -633,7 +646,7 @@
                 }
                 return context[n];
             };
- 
+
             factory(require, module.exports, module);
             context[name] = module.exports;
         };
