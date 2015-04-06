@@ -54,6 +54,9 @@
         if (frozenTabEnvironment) {
             reasons.push('frozen tab environment detected');
         }
+        if (!setItemAllowed) {
+            reasons.push('localStorage.setItem not allowed');
+        }
 
         if (reasons.length > 0) {
             errorMsg += ': ' + reasons.join(', ');
