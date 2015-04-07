@@ -81,16 +81,62 @@ The event will not fire if the destination is present and differs from the id of
 Why was it made?
 ----------------
 
-I wanted to be able to have robust cross tab communication for the purpose of resource sharing (such as websockets). Though there are some libraries which have a similar goal, they all had subtle issues. This library aims to be the most correct it can be for supported browsers. This library was created with inspiration from the excellent [intercom.js](https://github.com/diy/intercom.js/) library, and addresses several of it's shortcomings:
+I wanted to be able to have robust cross tab communication for the purpose of resource sharing (such as websockets). Though there are some libraries which have a similar goal, they all had subtle issues. This library aims to be the most correct it can be for supported browsers. This library was created with inspiration from the [intercom.js](https://github.com/diy/intercom.js/) library, and addresses several of it's shortcomings by dropping support for IE8 and using a lockless system that is entirely event driven. IE8 can still be used with crosstab by using the [tejacques/IE8-EventListener](https://github.com/tejacques/IE8-EventListener) EventListener polyfill
 
-* intercom.js doesn't implement proper locking.
- * does not guarantee that one tab holds the lock at a time (in fact this is impossible to guarantee flat out, but can be guaranteed within defined execution times).
- * locking on functions that throw will break.
- * Updates to any localStorage item will cause the locks to attempt to be acquired instead of only removals of the lock.
-* in trying to support IE8 message broadcasting in intercom.js has a race condition where messages can be dropped.
-* intercom.js leaks memory by maintaining a state of every message id received (also in an attempt to support IE8)
+Contributing
+------------
 
-crosstab solves these issues by dropping support for IE8 and using a lockless system that is entirely event driven (IE8 cannot pass messages via localStorage events, which is why intercom.js requires locking, because it supports IE8).
+Contributions are welcome and encouraged, you can contribute in several different ways, by filing issues, commenting on discussions, or contributing code.
+
+### Filing issues ###
+
+Please use the issue tracker for discussions and bug reports. For bug reports, please include as much detail as possible.
+
+These will help determine/resolve your issue:
+
+* Clear description of the problem or unexpexted behavior
+* Clear description of the expected result or output
+* Steps to reproduce
+* Steps you have taken to debug it yourself
+* Minimal reproducible example with self contained and runnable JS code
+
+### Contributing Code ###
+
+#### Project Workflow ####
+
+We use roughly the [Github Workflow](https://guides.github.com/introduction/flow/). You should:
+
+* Create an issue for the feature/bug
+* Fork the project
+* Create a new branch
+* Commit changes
+* Submit a pull request to the dev branch
+
+#### Tests ####
+
+Tests can be run with the following command:
+
+```.sh
+grunt test
+```
+
+* Tests muss pass
+* Tests should be added for each bug/feature that is added
+* All tests should be self-contained
+* If test is determined to be too difficult to create for an issue, there does not need to be a test for it
+
+#### Getting Started ####
+
+```.sh
+git clone https://github.com/tejacques/crosstab
+cd crosstab
+npm install
+grunt
+```
+
+You can now access:
+* Examples: [http://localhost:9000](http://localhost:9000)
+* Tests: [http://localhost:9000/test/mocha_test.html](http://localhost:9000/test/mocha_test.html)
 
 [downloads-img]: https://img.shields.io/npm/dm/crosstab.svg
 [npm-url]: https://npmjs.org/package/crosstab
