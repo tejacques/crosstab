@@ -54,7 +54,7 @@ If a destination is not specified, the message is broadcast to all tabs, includi
 
 ## Event Handlers ##
 
-crosstab registers event handlers like this:
+crosstab registers and unregisters event handlers like this:
 
 ```JavaScript
 crosstab.on('eventName', function(message) {
@@ -66,12 +66,12 @@ The messages received by events have the following format:
 
 ```JavaScript
 var message = {
-    id: util.generateId(),    // The unique ID of this message
-    event: event,             // The name of the event
-    data: data,               // The data to pass
-    destination: destination, // The destination tab
-    origin: crosstab.id,      // The origin tab
-    timestamp: util.now()     // The time the message was created
+    id: string,          // The unique ID of this message
+    event: string,       // The name of the event
+    data: any,           // The data passed
+    destination: string, // The destination tab
+    origin: string,      // The origin tab
+    timestamp: number    // The time the message was created
 };
 ```
 
