@@ -76,6 +76,16 @@
         }
     };
 
+    var toString = Object.prototype.toString;
+
+    util.isArray = Array.isArray || function(obj) {
+        return toString.call(obj) === '[object Array]';
+    };
+
+    util.isNumber = function(obj) {
+        return toString.call(obj) === '[object Number]';
+    };
+
     util.forEachObj = function (thing, fn) {
         for (var key in thing) {
             if (thing.hasOwnProperty(key)) {
@@ -91,7 +101,7 @@
     };
 
     util.forEach = function (thing, fn) {
-        if (Object.prototype.toString.call(thing) === '[object Array]') {
+        if (util.isArray(thing)) {
             util.forEachArr(thing, fn);
         } else {
             util.forEachObj(thing, fn);
@@ -108,7 +118,7 @@
     };
 
     util.filter = function (thing, fn) {
-        var isArr = Object.prototype.toString.call(thing) === '[object Array]';
+        var isArr = util.isArray(thing);
         var res = isArr ? [] : {};
 
         if (isArr) {
@@ -147,31 +157,65 @@
     // events by key.
     util.createEventHandler = function () {
         var events = {};
+        var subscribeKeyToListenerIndex = {};
+
+        var findHandlerIndexByKey = function (event, key) {
+            var listenerIndex;
+            if (subscribeKeyToListenerIndex[event] &&
+                util.isNumber(subscribeKeyToListenerIndex[event][key])) {
+                listenerIndex = subscribeKeyToListenerIndex[event][key];
+            }
+            return listenerIndex;
+        };
 
         var addListener = function (event, listener, key) {
             key = key || listener;
             var handlers = listeners(event);
-            handlers[key] = listener;
+
+            var listenerIndex = findHandlerIndexByKey(event, key);
+
+            if (listenerIndex === undefined) {
+                listenerIndex = handlers.length;
+                handlers[listenerIndex] = listener;
+
+                subscribeKeyToListenerIndex[event] || (subscribeKeyToListenerIndex[event] = {});
+                subscribeKeyToListenerIndex[event][key] = listenerIndex;
+            } else {
+                handlers[listenerIndex] = listener;
+            }
 
             return key;
         };
 
         var removeListener = function (event, key) {
-            if (events[event] && events[event][key]) {
-                delete events[event][key];
+            var listenerIndex = subscribeKeyToListenerIndex[event][key];
+            if (listenerIndex === undefined) return false;
+
+            if (events[event] && events[event][listenerIndex]) {
+                delete events[event][listenerIndex];
+                delete subscribeKeyToListenerIndex[event][key];
                 return true;
             }
             return false;
         };
 
         var removeAllListeners = function (event) {
+            var successful = false;
             if (event) {
                 if (events[event]) {
                     delete events[event];
+                    successful = true;
+                }
+                if (subscribeKeyToListenerIndex[event]) {
+                    delete subscribeKeyToListenerIndex[event];
+                    successful = successful && true;
                 }
             } else {
                 events = {};
+                subscribeKeyToListenerIndex = {};
+                successful = true;
             }
+            return successful;
         };
 
         var emit = function (event) {
@@ -187,8 +231,7 @@
 
         var once = function (event, listener, key) {
             // Generate a unique id for this listener
-            var handlers = listeners(event);
-            while (!key || handlers[key]) {
+            while (!key || (findHandlerIndexByKey(event, key) !== undefined)) {
                 key = util.generateId();
             }
 
@@ -202,14 +245,27 @@
         };
 
         var listeners = function (event) {
-            var handlers = events[event] = events[event] || {};
+            var handlers = events[event] = events[event] || [];
             return handlers;
+        };
+
+        var destructor = function() {
+            removeAllListeners();
         };
 
         return {
             addListener: addListener,
             on: addListener,
-            off: removeListener,
+            off: function(event, key) {
+                var argsLen = arguments.length;
+                if (!argsLen) {
+                    return removeAllListeners();
+                } else if (argsLen === 1) {
+                    return removeAllListeners(event);
+                } else {
+                    return removeListener(event, key);
+                }
+            },
             once: once,
             emit: emit,
             listeners: listeners,
@@ -231,7 +287,8 @@
         emit: eventHandler.emit,
         listeners: eventHandler.listeners,
         removeListener: eventHandler.removeListener,
-        removeAllListeners: eventHandler.removeAllListeners
+        removeAllListeners: eventHandler.removeAllListeners,
+        destructor: eventHandler.destructor
     };
 
     var lastNewValue;
@@ -305,6 +362,8 @@
         } else {
             broadcast(util.eventTypes.tabClosed, crosstab.id);
         }
+
+        util.events.destructor();
     }
 
     function getMaster() {
@@ -468,6 +527,7 @@
     crosstab.broadcastMaster = broadcastMaster;
     crosstab.on = util.events.on;
     crosstab.once = util.events.once;
+    crosstab.off = util.events.off;
 
     // --- Crosstab supported ---
     // Check to see if the global frozen tab environment key or supported key has been set.
