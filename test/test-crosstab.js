@@ -125,10 +125,11 @@ describe('crosstab', function () {
         expect(order).to.eql([2, 3, 1, 101, 102]);
     });
 
-    it('should event unsubscribe function work', function() {
+    it('should not invoke event listener after unsubscribing', function() {
         var msg = "test";
         var received;
         var offSuccessful;
+        var listeners = crosstab.util.events.listeners;
 
         // -------------------------------
         // unsubscribe with event + key
@@ -148,11 +149,13 @@ describe('crosstab', function () {
         expect(received).to.eql(msg + '-1');
 
         // unsubscribe with event + key
+        var listenersLen = listeners(evt1).length;
         received = undefined;
         offSuccessful = crosstab.off(evt1, 'first');
         expect(offSuccessful).to.eql(true);
         crosstab.broadcast(evt1, msg);
         expect(received).to.be(undefined);
+        expect(listeners(evt1).length).to.be(listenersLen-1);
 
         // -------------------------------
         // unsubscribe with event
@@ -166,7 +169,7 @@ describe('crosstab', function () {
 
         // unsubcribe with non-exist event
         received = undefined;
-        var offSuccessful = crosstab.off('non-exist');
+        offSuccessful = crosstab.off('non-exist');
         expect(offSuccessful).to.eql(false);
         crosstab.broadcast(evt2, msg);
         expect(received).to.eql(msg + '-1');

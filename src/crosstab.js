@@ -152,18 +152,32 @@
     };
 
     // --- Events ---
-    // node.js style events, with the main difference being object based
-    // rather than array based, as well as being able to add/remove
-    // events by key.
+    // node.js style events, with the main difference being able
+    // to add/remove events by key.
     util.createEventHandler = function () {
         var events = {};
-        var subscribeKeyToListenerIndex = {};
+        var subscribeKeyToListener = {};
+
+        var findHandlerByKey = function(event, key) {
+            var handler;
+            if (subscribeKeyToListener[event]) {
+                handler = subscribeKeyToListener[event][key];
+            }
+            return handler;
+        };
 
         var findHandlerIndexByKey = function (event, key) {
-            var listenerIndex;
-            if (subscribeKeyToListenerIndex[event] &&
-                util.isNumber(subscribeKeyToListenerIndex[event][key])) {
-                listenerIndex = subscribeKeyToListenerIndex[event][key];
+            var listenerIndex = -1;
+            var listener = findHandlerByKey(event, key);
+            var eventList = events[event];
+            if (eventList && listener) {
+                var len = eventList.length || 0;
+                for(var i = 0; i < len; i++) {
+                    if (eventList[i] === listener) {
+                        listenerIndex = i;
+                        break;
+                    }
+                }
             }
             return listenerIndex;
         };
@@ -172,15 +186,20 @@
             key = key || listener;
             var handlers = listeners(event);
 
-            var listenerIndex = findHandlerIndexByKey(event, key);
+            var storedHandler = findHandlerByKey(event, key);
+            var listenerIndex;
 
-            if (listenerIndex === undefined) {
+            if (storedHandler === undefined) {
                 listenerIndex = handlers.length;
                 handlers[listenerIndex] = listener;
 
-                subscribeKeyToListenerIndex[event] || (subscribeKeyToListenerIndex[event] = {});
-                subscribeKeyToListenerIndex[event][key] = listenerIndex;
+                if (!subscribeKeyToListener[event]) {
+                    (subscribeKeyToListener[event] = {});
+                }
+
+                subscribeKeyToListener[event][key] = listener;
             } else {
+                listenerIndex = findHandlerIndexByKey(event, key);
                 handlers[listenerIndex] = listener;
             }
 
@@ -188,12 +207,13 @@
         };
 
         var removeListener = function (event, key) {
-            var listenerIndex = subscribeKeyToListenerIndex[event][key];
-            if (listenerIndex === undefined) return false;
+            var handler = findHandlerByKey(event, key);
+            var listenerIndex = findHandlerIndexByKey(event, key);
+            if (listenerIndex === -1) return false;
 
             if (events[event] && events[event][listenerIndex]) {
-                delete events[event][listenerIndex];
-                delete subscribeKeyToListenerIndex[event][key];
+                events[event].splice(listenerIndex, 1);
+                delete subscribeKeyToListener[event][key];
                 return true;
             }
             return false;
@@ -206,13 +226,13 @@
                     delete events[event];
                     successful = true;
                 }
-                if (subscribeKeyToListenerIndex[event]) {
-                    delete subscribeKeyToListenerIndex[event];
+                if (subscribeKeyToListener[event]) {
+                    delete subscribeKeyToListener[event];
                     successful = successful && true;
                 }
             } else {
                 events = {};
-                subscribeKeyToListenerIndex = {};
+                subscribeKeyToListener = {};
                 successful = true;
             }
             return successful;
@@ -231,7 +251,7 @@
 
         var once = function (event, listener, key) {
             // Generate a unique id for this listener
-            while (!key || (findHandlerIndexByKey(event, key) !== undefined)) {
+            while (!key || (findHandlerByKey(event, key) !== undefined)) {
                 key = util.generateId();
             }
 
