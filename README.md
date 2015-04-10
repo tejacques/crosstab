@@ -110,7 +110,7 @@ We use roughly the [Github Workflow](https://guides.github.com/introduction/flow
 * Fork the project
 * Create a new branch
 * Commit changes
-* Submit a pull request to the dev branch
+* Submit a pull request to the master branch
 
 #### Tests ####
 
