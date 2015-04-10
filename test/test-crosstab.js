@@ -77,7 +77,7 @@ var removeIframe = function (iframe) {
 
 describe('crosstab', function () {
 
-    it ('should be a function', function () {
+    it('should be a function', function () {
         expect(window.crosstab).to.be.a('function');
     });
 
@@ -96,6 +96,90 @@ describe('crosstab', function () {
         });
         crosstab.broadcast('test', msg);
         expect(received).to.be(msg);
+    });
+
+    it('should invoke event listeners in the order they added', function () {
+        var msg = "TestMessage";
+        var order = [];
+
+        // http://stackoverflow.com/questions/280713/elements-order-in-a-for-in-loop
+        crosstab.on('test', function(message) {
+            expect((message || {}).data).to.be(msg);
+            order.push(2);
+        }, 'second');
+        crosstab.on('test', function(message) {
+            order.push(3);
+        }, '3');
+        crosstab.on('test', function(message) {
+            order.push(1);
+        }, 'first');
+        crosstab.on('test', function(message) {
+            expect((message || {}).data).to.be(msg);
+            order.push(101);
+        });
+        crosstab.on('test', function(message) {
+            order.push(102);
+        });
+
+        crosstab.broadcast('test', msg);
+        expect(order).to.eql([2, 3, 1, 101, 102]);
+    });
+
+    it('should not invoke event listener after unsubscribing', function() {
+        var msg = "test";
+        var received;
+        var offSuccessful;
+        var listeners = crosstab.util.events.listeners;
+
+        // -------------------------------
+        // unsubscribe with event + key
+        // -------------------------------
+        var evt1 = 'test-1';
+        crosstab.on(evt1, function(message) {
+            received = message.data + '-1';
+        }, 'first');
+        crosstab.broadcast(evt1, msg);
+        expect(received).to.eql(msg + '-1');
+
+        // unsubscribe with event + non-exist key
+        received = undefined;
+        offSuccessful = crosstab.off(evt1, 'non-exist');
+        expect(offSuccessful).to.eql(false);
+        crosstab.broadcast(evt1, msg);
+        expect(received).to.eql(msg + '-1');
+
+        // unsubscribe with event + key
+        var listenersLen = listeners(evt1).length;
+        received = undefined;
+        offSuccessful = crosstab.off(evt1, 'first');
+        expect(offSuccessful).to.eql(true);
+        crosstab.broadcast(evt1, msg);
+        expect(received).to.be(undefined);
+        expect(listeners(evt1).length).to.be(listenersLen-1);
+
+        // -------------------------------
+        // unsubscribe with event
+        // -------------------------------
+        var evt2 = 'test-2';
+        crosstab.on(evt2, function(message) {
+            received = message.data + '-1';
+        }, 'first');
+        crosstab.broadcast(evt2, msg);
+        expect(received).to.eql(msg + '-1');
+
+        // unsubcribe with non-exist event
+        received = undefined;
+        offSuccessful = crosstab.off('non-exist');
+        expect(offSuccessful).to.eql(false);
+        crosstab.broadcast(evt2, msg);
+        expect(received).to.eql(msg + '-1');
+
+        // unscribe with event
+        received = undefined;
+        offSuccessful = crosstab.off(evt2);
+        expect(offSuccessful).to.eql(true);
+        crosstab.broadcast(evt2, msg);
+        expect(received).to.be(undefined);
     });
 
     it('should only trigger callback once for crosstab.once', function () {
