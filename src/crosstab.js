@@ -78,12 +78,16 @@
 
     var toString = Object.prototype.toString;
 
-    util.isArray = Array.isArray || function(obj) {
-        return toString.call(obj) === '[object Array]';
+    util.isArray = Array.isArray || function (arr) {
+        return arr instanceof Array;
     };
 
-    util.isNumber = function(obj) {
-        return toString.call(obj) === '[object Number]';
+    util.isNumber = function (num) {
+        return typeof num === 'number';
+    };
+
+    util.isFunction = function (fn) {
+        return typeof fn === 'function';
     };
 
     util.forEachObj = function (thing, fn) {
@@ -94,9 +98,10 @@
         }
     };
 
-    util.forEachArr = function (thing, fn) {
-        for (var i = 0; i < thing.length; i++) {
-            fn.call(thing, thing[i], i);
+    util.forEachArr = function (arr, fn) {
+        var len = arr.length
+        for (var i = 0; i < len; i++) {
+            fn.call(arr, arr[i], i, arr);
         }
     };
 
@@ -166,9 +171,8 @@
             return handler;
         };
 
-        var findHandlerIndexByKey = function (event, key) {
+        var findHandlerIndex = function (event, listener) {
             var listenerIndex = -1;
-            var listener = findHandlerByKey(event, key);
             var eventList = events[event];
             if (eventList && listener) {
                 var len = eventList.length || 0;
@@ -183,7 +187,6 @@
         };
 
         var addListener = function (event, listener, key) {
-            key = key || listener;
             var handlers = listeners(event);
 
             var storedHandler = findHandlerByKey(event, key);
@@ -197,18 +200,23 @@
                     (subscribeKeyToListener[event] = {});
                 }
 
-                subscribeKeyToListener[event][key] = listener;
+                if (key) {
+                    subscribeKeyToListener[event][key] = listener;
+                }
             } else {
-                listenerIndex = findHandlerIndexByKey(event, key);
+                listenerIndex = findHandlerIndex(event, storedHandler);
                 handlers[listenerIndex] = listener;
             }
 
-            return key;
+            return key || listener;
         };
 
         var removeListener = function (event, key) {
-            var handler = findHandlerByKey(event, key);
-            var listenerIndex = findHandlerIndexByKey(event, key);
+            var handler = util.isFunction(key)
+                ? key
+                : findHandlerByKey(event, key);
+
+            var listenerIndex = findHandlerIndex(event, handler);
             if (listenerIndex === -1) return false;
 
             if (events[event] && events[event][listenerIndex]) {
@@ -243,7 +251,7 @@
             var handlers = listeners(event);
 
             util.forEach(handlers, function (listener) {
-                if (typeof (listener) === 'function') {
+                if (util.isFunction(listener)) {
                     listener.apply(this, args);
                 }
             });
