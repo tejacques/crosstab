@@ -93,7 +93,7 @@
     util.forEachObj = function (obj, fn) {
         for (var key in obj) {
             if (obj.hasOwnProperty(key)) {
-                fn.call(thing, obj[key], key);
+                fn.call(obj, obj[key], key);
             }
         }
     };
