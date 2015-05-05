@@ -90,10 +90,10 @@
         return typeof fn === 'function';
     };
 
-    util.forEachObj = function (thing, fn) {
-        for (var key in thing) {
-            if (thing.hasOwnProperty(key)) {
-                fn.call(thing, thing[key], key);
+    util.forEachObj = function (obj, fn) {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                fn.call(thing, obj[key], key);
             }
         }
     };
