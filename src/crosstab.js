@@ -275,6 +275,7 @@
 
         return {
             addListener: addListener,
+            destructor: destructor,
             on: addListener,
             off: function(event, key) {
                 var argsLen = arguments.length;
