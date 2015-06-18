@@ -370,6 +370,7 @@
     }
 
     function beforeUnload() {
+        crosstab.stopKeepalive = true;
         var numTabs = 0;
         util.forEach(util.tabs, function (tab, key) {
             if (key !== util.keys.MASTER_TAB) {
