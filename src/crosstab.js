@@ -369,7 +369,8 @@
         return item;
     }
 
-    function beforeUnload() {
+    function unload() {
+        crosstab.stopKeepalive = true;
         var numTabs = 0;
         util.forEach(util.tabs, function (tab, key) {
             if (key !== util.keys.MASTER_TAB) {
@@ -685,7 +686,7 @@
     } else {
         // ---- Setup Storage Listener
         window.addEventListener('storage', onStorageEvent, false);
-        window.addEventListener('beforeunload', beforeUnload, false);
+        window.addEventListener('unload', unload, false);
 
         util.events.on('PING', function (message) {
             // only handle direct messages
