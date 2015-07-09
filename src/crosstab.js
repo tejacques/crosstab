@@ -151,6 +151,7 @@
 
     util.eventTypes = {
         becomeMaster: 'becomeMaster',
+        demoteFromMaster: 'demotedFromMaster',
         tabUpdated: 'tabUpdated',
         tabClosed: 'tabClosed',
         tabPromoted: 'tabPromoted'
@@ -476,17 +477,23 @@
     eventHandler.addListener(util.eventTypes.tabPromoted, function (message) {
         var id = message.data;
         var lastUpdated = message.timestamp;
+        var previousMaster = getMaster().id;
         setMaster({
             id: id,
             lastUpdated: lastUpdated
         });
 
-        if (crosstab.id === id) {
+        if (crosstab.id === id
+            && previousMaster !== crosstab.id) {
             // set the tabs in localStorage
             setStoredTabs();
 
             // emit the become master event so we can handle it accordingly
             util.events.emit(util.eventTypes.becomeMaster);
+        } else if (crosstab.id !== id
+            && previousMaster === crosstab.id) {
+            // emit the demoted from master event so we can clean up resources
+            util.events.emit(util.eventTypes.demoteFromMaster);
         }
     });
 
