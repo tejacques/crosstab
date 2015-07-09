@@ -409,8 +409,14 @@
         delete util.tabs[util.keys.MASTER_TAB];
     }
 
+    function getMasterId() {
+        var master = getMaster();
+
+        return master ? master.id : 0;
+    }
+
     function isMaster() {
-        return getMaster().id === crosstab.id;
+        return getMasterId() === crosstab.id;
     }
 
     function masterTabElection() {
@@ -465,10 +471,10 @@
             masterTabElection();
         }
 
-        if (getMaster().id === tab.id) {
+        if (getMasterId() === tab.id) {
             setMaster(tab);
         }
-        if (getMaster().id === crosstab.id) {
+        if (isMaster()) {
             // If I am master, save the new tabs out
             setStoredTabs();
         }
@@ -477,20 +483,20 @@
     eventHandler.addListener(util.eventTypes.tabPromoted, function (message) {
         var id = message.data;
         var lastUpdated = message.timestamp;
-        var previousMaster = getMaster().id;
+        var previousMaster = getMasterId();
         setMaster({
             id: id,
             lastUpdated: lastUpdated
         });
 
-        if (crosstab.id === id
+        if (isMaster()
             && previousMaster !== crosstab.id) {
             // set the tabs in localStorage
             setStoredTabs();
 
             // emit the become master event so we can handle it accordingly
             util.events.emit(util.eventTypes.becomeMaster);
-        } else if (crosstab.id !== id
+        } else if (!isMaster()
             && previousMaster === crosstab.id) {
             // emit the demoted from master event so we can clean up resources
             util.events.emit(util.eventTypes.demoteFromMaster);
