@@ -394,7 +394,6 @@
             broadcast(util.eventTypes.tabClosed, crosstab.id);
         }
 
-        util.events.destructor();
     }
 
     function getMaster() {
