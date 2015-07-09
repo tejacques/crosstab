@@ -38,6 +38,8 @@ crosstab is a javascript utility library for inter-tab communication on the same
 | FireFox |       30+      |
 | Safari  |        6.1+    |
 
+No Mobile browser is supported.
+
 # API #
 
 Most of the time, you will only need to do two things with crosstab, set up event handlers, and fire off events.
