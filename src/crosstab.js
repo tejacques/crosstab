@@ -99,7 +99,7 @@
     };
 
     util.forEachArr = function (arr, fn) {
-        var len = arr.length
+        var len = arr.length;
         for (var i = 0; i < len; i++) {
             fn.call(arr, arr[i], i, arr);
         }
