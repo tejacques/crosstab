@@ -396,6 +396,18 @@
 
     }
 
+    function restoreLoop() {
+        crosstab.stopKeepalive = false;
+        keepaliveLoop();
+    }
+
+    function swapUnloadEvents() {
+        // `beforeunload` replaced by `unload` (IE11 will be smart now)
+        window.removeEventListener('beforeunload', unload, false);
+        window.addEventListener('unload', unload, false);
+        restoreLoop();
+    }
+
     function getMaster() {
         return util.tabs[util.keys.MASTER_TAB];
     }
@@ -705,7 +717,10 @@
     } else {
         // ---- Setup Storage Listener
         window.addEventListener('storage', onStorageEvent, false);
-        window.addEventListener('unload', unload, false);
+        // start with the `beforeunload` event due to IE11
+        window.addEventListener('beforeunload', unload, false);
+        // swap `beforeunload` to `unload` after DOM is loaded
+        window.addEventListener('DOMContentLoaded', swapUnloadEvents, false);
 
         util.events.on('PING', function (message) {
             // only handle direct messages
