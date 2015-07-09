@@ -697,7 +697,6 @@
     function keepaliveLoop() {
         if (crosstab.supported && !crosstab.stopKeepalive) {
             keepalive();
-            window.setTimeout(keepaliveLoop, TAB_KEEPALIVE);
         }
     }
 
@@ -720,6 +719,7 @@
             }
         });
 
+        setInterval(keepaliveLoop, TAB_KEEPALIVE);
         keepaliveLoop();
     }
 
