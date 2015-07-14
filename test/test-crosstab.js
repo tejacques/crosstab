@@ -280,4 +280,76 @@ describe('crosstab', function () {
             });
         });
     });
+
+    describe('setup during load', function() {
+        var iframe;
+
+        beforeEach(function (done) {
+            window.done = done;
+            iframe = runIframe(function () {
+                crosstab(function () {
+                    addText('crosstab setup complete');
+                });
+                window.parent.done();
+            });
+        });
+
+        it('should stop on beforeunload event and recover when canceled', function (done) {
+            window.done = done;
+
+            iframe.run(function () {
+                crosstab(function() {
+
+                    window.parent.expect(crosstab.stopKeepalive).to.be.undefined;
+                    
+                    // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
+                    var e = document.createEvent('Event');
+                    e.initEvent('beforeunload', true, true);
+                    window.dispatchEvent(e);
+
+                    window.parent.expect(crosstab.stopKeepalive).to.be(true);
+
+                    // should recover if the event was canceled
+                    e = document.createEvent('Event');
+                    e.initEvent('DOMContentLoaded', true, false);
+                    window.dispatchEvent(e);
+
+                    window.parent.expect(crosstab.stopKeepalive).to.be(false);
+
+                    window.parent.done();
+                });
+            });
+        });
+
+        it ('should stop on unload event after DOMContentLoaded event', function (done) {
+            window.done = done;
+            iframe.run(function () {
+                crosstab(function() {
+                    
+                    window.parent.expect(crosstab.stopKeepalive).to.be.undefined;
+
+                    // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
+                    var e = document.createEvent('Event');
+                    e.initEvent('DOMContentLoaded', true, false);
+                    window.dispatchEvent(e);
+
+                    e = document.createEvent('Event');
+                    e.initEvent('beforeunload', true, true);
+                    window.dispatchEvent(e);
+
+                    // nothing should have happened
+                    window.parent.expect(crosstab.stopKeepalive).to.be.undefined;
+                    
+                    // should respond only to unload event now
+                    e = document.createEvent('Event');
+                    e.initEvent('unload', true, false);
+                    window.dispatchEvent(e);
+
+                    window.parent.expect(crosstab.stopKeepalive).to.be(true);
+
+                    window.parent.done();
+                });
+            });
+        });
+    });
 });
