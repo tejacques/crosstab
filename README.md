@@ -123,9 +123,8 @@ grunt test
 ```
 
 * Tests must pass
-* Tests should be added for each bug/feature that is added
+* Tests should be added for each bug/feature that is added, unless discussed
 * All tests should be self-contained
-* If test is determined to be too difficult to create for an issue, there does not need to be a test for it
 
 #### Getting Started ####
 
