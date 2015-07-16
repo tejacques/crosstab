@@ -27,9 +27,8 @@
     "grunt-saucelabs": "~8.6.0",
     "mocha": "^2.1.0",
     "mocha-phantomjs": "^3.5.3",
-    "phantomjs": "^1.9.15",
     "sauce-tunnel": "^2.2.2",
-    "saucelabs-mocha-reporter": "git://github.com/tejacques/saucelabs-mocha-reporter"
+    "saucelabs-mocha-reporter": "^0.1.0"
   },
   "license": "Apache 2.0",
   "scripts": {
