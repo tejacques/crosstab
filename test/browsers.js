@@ -1,21 +1,21 @@
 var browsers = {
     chrome: [
-        ['Linux', 'chrome', '40'],
+        ['Linux', 'chrome', ''],
     ],
     'chrome-osx': [
-        ['OSX 10.10', 'chrome', '40'],
+        ['OSX 10.10', 'chrome', ''],
     ],
     'chrome-win': [
-        ['Windows 7', 'chrome', '40'],
+        ['Windows 7', 'chrome', ''],
     ],
     firefox: [
-        ['Linux', 'firefox', '35'],
+        ['Linux', 'firefox', ''],
     ],
     'firefox-osx': [
-        ['OSX 10.10', 'firefox', '35'],
+        ['OSX 10.10', 'firefox', ''],
     ],
     'firefox-win': [
-        ['Windows 7', 'firefox', '35'],
+        ['Windows 7', 'firefox', ''],
     ],
     'ie8': [
         ['Windows XP', 'internet explorer', '8'],
@@ -45,28 +45,29 @@ var browsers = {
     ],
 
     quick: [
-        ['Windows 7', 'chrome', '40'], ['Windows 7', 'firefox', '35'],
+        ['Windows 7', 'chrome', ''],
+        ['Windows 7', 'firefox', ''],
         ['Windows 7', 'internet explorer', '11'],
         ['OSX 10.10', 'safari', '8']
     ],
     ci: [
         // Chrome
-        ['Linux', 'chrome', '40'],
-        ['OSX 10.10', 'chrome', '40'],
-        ['Windows XP', 'chrome', '40'],
-        ['Windows 7', 'chrome', '40'],
-        ['Windows 8', 'chrome', '40'],
-        ['Windows 8.1', 'chrome', '40'],
+        ['Linux', 'chrome', ''],
+        ['OSX 10.10', 'chrome', ''],
+        ['Windows XP', 'chrome', ''],
+        ['Windows 7', 'chrome', ''],
+        ['Windows 8', 'chrome', ''],
+        ['Windows 8.1', 'chrome', ''],
         // Firefox
-        ['Linux', 'firefox', '35'],
-        ['OSX 10.10', 'firefox', '35'],
-        ['Windows XP', 'firefox', '35'],
-        ['Windows 7', 'firefox', '35'],
-        ['Windows 8', 'firefox', '35'],
-        ['Windows 8.1', 'firefox', '35'],
+        ['Linux', 'firefox', ''],
+        ['OSX 10.10', 'firefox', ''],
+        ['Windows XP', 'firefox', ''],
+        ['Windows 7', 'firefox', ''],
+        ['Windows 8', 'firefox', ''],
+        ['Windows 8.1', 'firefox', ''],
         // Internet Explorer
-        // ['Windows XP', 'internet explorer', '8'], // Off for now
-        // ['Windows 7', 'internet explorer', '8'], // Off for now
+        ['Windows XP', 'internet explorer', '8'], // Off for now
+        ['Windows 7', 'internet explorer', '8'], // Off for now
         ['Windows 7', 'internet explorer', '9'],
         ['Windows 7', 'internet explorer', '10'],
         ['Windows 7', 'internet explorer', '11'],

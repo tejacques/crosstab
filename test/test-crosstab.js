@@ -8,6 +8,20 @@ var runInIframe = function (iframe, fn) {
         + ").apply(window, " + JSON.stringify(args) + ");");
 };
 
+var compliantOnload = function (onload) {
+    var done;
+    return function () {
+        if (!done && (
+                !this.readyState
+                || this.readyState === 'loaded'
+                || this.readyState === 'complete')) {
+            done = true;
+            this.onload = this.onreadystatechange = null;
+            onload();
+        }
+    };
+};
+
 var runIframe = function (onload) {
     // create iframe
     var iframe = document.createElement('iframe');
@@ -43,7 +57,7 @@ var runIframe = function (onload) {
         };
     };
 
-    iframe.onload = function () {
+    iframe.onload = iframe.onreadystatechange = compliantOnload(function () {
         iframe.run(function () {
             // addText helper function
             window.addText = function (txt) {
@@ -58,10 +72,18 @@ var runIframe = function (onload) {
         var crosstabScript = document.createElement('script');
         crosstabScript.type = 'text/javascript';
         crosstabScript.src = '/src/crosstab.js';
-        crosstabScript.onload = crosstabOnload;
 
-        iframe.contentWindow.document.head.appendChild(crosstabScript);
-    };
+        var head = document.getElementsByTagName('head')[0] || document.documentElement;
+        crosstabScript.onload = crosstabScript.onreadystatechange = compliantOnload(function () {
+            crosstabOnload();
+            if (head && crosstabScript.parentNode) {
+                crosstabScript.parentNode.removeChild(crosstabScript);
+            }
+        });
+
+        iframe.contentWindow.document.getElementsByTagName('head')[0]
+            .appendChild(crosstabScript);
+    });
 
     document.body.appendChild(iframe);
     return iframe;
@@ -234,6 +256,7 @@ describe('crosstab', function () {
 
             var msg = "OtherTabTestMessage";
             var received;
+
             crosstab.once('otherTabTest', function (message) {
                 received = message.data;
                 expect(received).to.be(msg);
@@ -280,6 +303,19 @@ describe('crosstab', function () {
             });
         });
 
+        window.createEvent = function (type, bubbles, cancelable) {
+            var e;
+            // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
+            if (document.createEvent) {
+                e = document.createEvent('Event');
+                e.initEvent(type, bubbles, cancelable);
+            } else {
+                e = new Event(type, { bubbles: bubbles, cancelable: cancelable });
+            }
+
+            return e;
+        };
+
         it('should stop on beforeunload event and recover when canceled', function (done) {
             window.done = done;
 
@@ -288,16 +324,13 @@ describe('crosstab', function () {
 
                     window.parent.expect(crosstab.stopKeepalive).to.be(undefined);
                     
-                    // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
-                    var e = document.createEvent('Event');
-                    e.initEvent('beforeunload', true, true);
+                    var e = window.parent.createEvent('beforeunload', true, true);
                     window.dispatchEvent(e);
 
                     window.parent.expect(crosstab.stopKeepalive).to.be(true);
 
                     // should recover if the event was canceled
-                    e = document.createEvent('Event');
-                    e.initEvent('DOMContentLoaded', true, false);
+                    e = window.parent.createEvent('DOMContentLoaded', true, false);
                     window.dispatchEvent(e);
 
                     window.parent.expect(crosstab.stopKeepalive).to.be(false);
@@ -315,20 +348,17 @@ describe('crosstab', function () {
                     window.parent.expect(crosstab.stopKeepalive).to.be(undefined);
 
                     // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
-                    var e = document.createEvent('Event');
-                    e.initEvent('DOMContentLoaded', true, false);
+                    var e = window.parent.createEvent('DOMContentLoaded', true, false);
                     window.dispatchEvent(e);
 
-                    e = document.createEvent('Event');
-                    e.initEvent('beforeunload', true, true);
+                    e = window.parent.createEvent('beforeunload', true, true);
                     window.dispatchEvent(e);
 
                     // restoreLoop should have set crosstab.stopKeepalive to false
                     window.parent.expect(crosstab.stopKeepalive).to.be(false);
                     
                     // should respond only to unload event now
-                    e = document.createEvent('Event');
-                    e.initEvent('unload', true, false);
+                    e = window.parent.createEvent('unload', true, false);
                     window.dispatchEvent(e);
 
                     window.parent.expect(crosstab.stopKeepalive).to.be(true);
