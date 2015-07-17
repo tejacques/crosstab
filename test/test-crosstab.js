@@ -279,20 +279,6 @@ describe('crosstab', function () {
                 });
             });
         });
-    });
-
-    describe('setup during load', function() {
-        var iframe;
-
-        beforeEach(function (done) {
-            window.done = done;
-            iframe = runIframe(function () {
-                crosstab(function () {
-                    addText('crosstab setup complete');
-                });
-                window.parent.done();
-            });
-        });
 
         it('should stop on beforeunload event and recover when canceled', function (done) {
             window.done = done;
@@ -300,7 +286,7 @@ describe('crosstab', function () {
             iframe.run(function () {
                 crosstab(function() {
 
-                    window.parent.expect(crosstab.stopKeepalive).to.be.undefined;
+                    window.parent.expect(crosstab.stopKeepalive).to.be(undefined);
                     
                     // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
                     var e = document.createEvent('Event');
@@ -326,7 +312,7 @@ describe('crosstab', function () {
             iframe.run(function () {
                 crosstab(function() {
                     
-                    window.parent.expect(crosstab.stopKeepalive).to.be.undefined;
+                    window.parent.expect(crosstab.stopKeepalive).to.be(undefined);
 
                     // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
                     var e = document.createEvent('Event');
@@ -337,8 +323,8 @@ describe('crosstab', function () {
                     e.initEvent('beforeunload', true, true);
                     window.dispatchEvent(e);
 
-                    // nothing should have happened
-                    window.parent.expect(crosstab.stopKeepalive).to.be.undefined;
+                    // restoreLoop should have set crosstab.stopKeepalive to false
+                    window.parent.expect(crosstab.stopKeepalive).to.be(false);
                     
                     // should respond only to unload event now
                     e = document.createEvent('Event');
