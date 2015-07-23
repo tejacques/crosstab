@@ -741,16 +741,22 @@
 
 /*!
  * UMD/AMD/Global context Module Loader wrapper
- * based off https://gist.github.com/wilsonpage/8598603
  *
  * This wrapper will try to use a module loader with the
  * following priority:
  *
  *  1.) AMD
  *  2.) CommonJS
- *  3.) Context Variable (window in the browser)
+ *  3.) Context Variable (this)
+ *    - window in the browser
+ *    - module.exports in node and browserify
  */
-});})(this, typeof define == 'function' && define.amd ? define
+});})(
+    // First arg -- the global object in the browser or node
+    (function() { try { return window; } catch(e) { return global; } })(),
+    // Second arg -- the define object
+    typeof define == 'function' && define.amd
+    ? define
     : (function (context) {
         'use strict';
         return typeof module == 'object' ? function (name, factory) {
