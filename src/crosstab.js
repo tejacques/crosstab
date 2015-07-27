@@ -634,6 +634,18 @@
     crosstab.on = util.events.on;
     crosstab.once = util.events.once;
     crosstab.off = util.events.off;
+    crosstab.onDirect = function (event, listener, key) {
+        var directListener = function (message) {
+            // only handle direct messages
+            if (!message.destination || message.destination !== crosstab.id) {
+                return;
+            }
+
+            listener(message);
+        };
+
+        return crosstab.on(event, directListener, key);
+    };
 
     // 10 minute timeout
     var CACHE_TIMEOUT = 10 * 60 * 1000;
@@ -777,31 +789,21 @@
         }
     }
 
-    // --- Check if crosstab is supported ---
-    if (!crosstab.supported) {
-        crosstab.broadcast = notSupported;
-    } else {
-        // ---- Setup Storage Listener
-        window.addEventListener('storage', onStorageEvent, false);
-        // start with the `beforeunload` event due to IE11
-        window.addEventListener('beforeunload', unload, false);
-        // swap `beforeunload` to `unload` after DOM is loaded
-        window.addEventListener('DOMContentLoaded', swapUnloadEvents, false);
+    // ---- Setup Storage Listener
+    window.addEventListener('storage', onStorageEvent, false);
+    // start with the `beforeunload` event due to IE11
+    window.addEventListener('beforeunload', unload, false);
+    // swap `beforeunload` to `unload` after DOM is loaded
+    window.addEventListener('DOMContentLoaded', swapUnloadEvents, false);
 
-        util.events.on('PING', function (message) {
-            // only handle direct messages
-            if (!message.destination || message.destination !== crosstab.id) {
-                return;
-            }
+    crosstab.onDirect('PING', function (message) {
+        if (util.now() - message.timestamp < PING_TIMEOUT) {
+            crosstab.broadcast('PONG', null, message.origin);
+        }
+    });
 
-            if (util.now() - message.timestamp < PING_TIMEOUT) {
-                crosstab.broadcast('PONG', null, message.origin);
-            }
-        });
-
-        setInterval(keepaliveLoop, TAB_KEEPALIVE);
-        keepaliveLoop();
-    }
+    setInterval(keepaliveLoop, TAB_KEEPALIVE);
+    keepaliveLoop();
 
     module.exports = crosstab;
 
