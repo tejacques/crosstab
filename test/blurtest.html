@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                font-size: 40px;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+function addTextToBody(str) {
+    var div = document.createElement('div');
+    div.innerHTML = str;
+    document.body.appendChild(div);
+}
+
+function logEvent(e) {
+    var date = '' + (+new Date());
+    var lastDate = localStorage.getItem(e.type);
+    localStorage.setItem(e.type, date);
+    var hidden = document.hidden;
+    console.log(e.type + ' hidden: ' + hidden + ' at: ' + date + ' last at: ' + lastDate);
+    addTextToBody(e.type + ' hidden: ' + hidden + ' at: ' + date + ' last at: ' + lastDate);
+}
+
+//window.addEventListener('blur', logEvent);
+//window.addEventListener('focus', logEvent);
+document.addEventListener('visibilitychange', logEvent);
+
+var start = '' + (+new Date());
+addTextToBody("start at: " + start);
+        </script>
+    </body>
+</html>
