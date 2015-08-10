@@ -753,7 +753,7 @@
  */
 });})(
     // First arg -- the global object in the browser or node
-    (function() { try { return window; } catch(e) { return global; } })(),
+    typeof window == 'object' ? window : global,
     // Second arg -- the define object
     typeof define == 'function' && define.amd
     ? define
