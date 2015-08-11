@@ -27,10 +27,10 @@ var browsers = {
         ['Windows 7', 'internet explorer', '10'],
     ],
     'ie11': [
-        ['Windows 8.1', 'internet explorer', '11'],
+        ['Windows 10', 'internet explorer', '11'],
     ],
     'ie': [
-        ['Windows 8.1', 'internet explorer', '11'],
+        ['Windows 10', 'internet explorer', '11'],
     ],
     safari: [
         ['OSX 10.10', 'safari', '8'],
@@ -48,7 +48,7 @@ var browsers = {
         ['Windows 7', 'chrome', ''],
         ['Windows 7', 'firefox', ''],
         ['Windows 7', 'internet explorer', '11'],
-        ['OSX 10.10', 'safari', '8']
+        ['OSX 10.11', 'safari', ''],
     ],
     ci: [
         // Chrome
@@ -58,6 +58,7 @@ var browsers = {
         ['Windows 7', 'chrome', ''],
         ['Windows 8', 'chrome', ''],
         ['Windows 8.1', 'chrome', ''],
+        ['Windows 11', 'chrome', ''],
         // Firefox
         ['Linux', 'firefox', ''],
         ['OSX 10.10', 'firefox', ''],
@@ -65,6 +66,7 @@ var browsers = {
         ['Windows 7', 'firefox', ''],
         ['Windows 8', 'firefox', ''],
         ['Windows 8.1', 'firefox', ''],
+        ['Windows 10', 'firefox', ''],
         // Internet Explorer
         ['Windows XP', 'internet explorer', '8'], // Off for now
         ['Windows 7', 'internet explorer', '8'], // Off for now
@@ -72,11 +74,12 @@ var browsers = {
         ['Windows 7', 'internet explorer', '10'],
         ['Windows 7', 'internet explorer', '11'],
         ['Windows 8.1', 'internet explorer', '11'],
+        ['Windows 10', 'internet explorer', '11'],
         // Safari
-        ['OSX 10.6', 'safari', '5.1'],
         ['OSX 10.8', 'safari', '6'],
         ['OSX 10.9', 'safari', '7'],
         ['OSX 10.10', 'safari', '8'],
+        ['OSX 10.11', 'safari', '8.1'],
         // Opera
         // Testing Opera 12 is currently broken on sauce labs
         // ['Linux', 'opera', '12.15'],
