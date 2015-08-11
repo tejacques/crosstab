@@ -222,7 +222,7 @@ describe('crosstab', function () {
         var iframe;
 
         beforeEach(function (done) {
-            this.timeout(10000);
+            this.timeout(20000);
             window.done = done;
             iframe = runIframe(function () {
                 crosstab(function () {
@@ -323,7 +323,7 @@ describe('crosstab', function () {
                 crosstab(function() {
 
                     window.parent.expect(crosstab.stopKeepalive).to.be(undefined);
-                    
+
                     var e = window.parent.createEvent('beforeunload', true, true);
                     window.dispatchEvent(e);
 
@@ -344,7 +344,7 @@ describe('crosstab', function () {
             window.done = done;
             iframe.run(function () {
                 crosstab(function() {
-                    
+
                     window.parent.expect(crosstab.stopKeepalive).to.be(undefined);
 
                     // FIXME use `new Event()` once PhantomJS 2.0 is available on npm
@@ -356,7 +356,7 @@ describe('crosstab', function () {
 
                     // restoreLoop should have set crosstab.stopKeepalive to false
                     window.parent.expect(crosstab.stopKeepalive).to.be(false);
-                    
+
                     // should respond only to unload event now
                     e = window.parent.createEvent('unload', true, false);
                     window.dispatchEvent(e);
