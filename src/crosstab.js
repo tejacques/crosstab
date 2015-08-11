@@ -583,21 +583,35 @@
     crosstab.once = util.events.once;
     crosstab.off = util.events.off;
 
+    // 10 minute timeout
+    var CACHE_TIMEOUT = 10 * 60 * 1000;
+
     // --- Crosstab supported ---
     // Check to see if the global frozen tab environment key or supported key has been set.
     if (!setupComplete && crosstab.supported) {
         var frozenTabsRaw = getLocalStorageRaw(util.keys.FROZEN_TAB_ENVIRONMENT);
-        var frozenTabs = frozenTabsRaw.data;
-        if (frozenTabs === true) {
-            frozenTabEnvironmentDetected();
+
+        if (frozenTabsRaw.timestamp) {
+            var frozenTabs = frozenTabsRaw.data;
+            if (util.now() - frozenTabsRaw.timestamp > CACHE_TIMEOUT) {
+                localStorage.clear(util.keys.FROZEN_TAB_ENVIRONMENT);
+            } else if (frozenTabs === true) {
+                frozenTabEnvironmentDetected();
+            }
         }
 
         var supportedRaw = getLocalStorageRaw(util.keys.SUPPORTED_KEY);
-        var supported = supportedRaw.data;
-        if (supported === false || supported === true) {
-            // As long as it is explicitely set, use the value
-            crosstab.supported = supported;
-            util.events.emit('setupComplete');
+
+        if (supportedRaw.timestamp) {
+            var supported = supportedRaw.data;
+
+            if (util.now() - supportedRaw.timestamp > CACHE_TIMEOUT) {
+                localStorage.clear(util.keys.SUPPORTED_KEY);
+            } else if (supported === false || supported === true) {
+                // As long as it is explicitely set, use the value
+                crosstab.supported = supported;
+                util.events.emit('setupComplete');
+            }
         }
     }
 
