@@ -58,7 +58,7 @@ var browsers = {
         ['Windows 7', 'chrome', ''],
         ['Windows 8', 'chrome', ''],
         ['Windows 8.1', 'chrome', ''],
-        ['Windows 11', 'chrome', ''],
+        ['Windows 10', 'chrome', ''],
         // Firefox
         ['Linux', 'firefox', ''],
         ['OSX 10.10', 'firefox', ''],
