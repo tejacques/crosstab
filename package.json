@@ -28,7 +28,7 @@
     "mocha": "^2.1.0",
     "mocha-phantomjs": "=3.5.3",
     "phantomjs": "~1.9.1",
-    "sauce-tunnel": "^2.2.2",
+    "sauce-tunnel": "^2.2.3",
     "saucelabs-mocha-reporter": "^0.1.0"
   },
   "license": "Apache-2.0",
