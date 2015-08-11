@@ -19,7 +19,7 @@ module.exports = function (grunt) {
         watch: {
             scripts: {
                 files: ['<%= jshint.files %>'],
-                tasks: ['jshint']
+                tasks: ['jshint', 'mocha_phantomjs']
             }
         },
         connect: {
