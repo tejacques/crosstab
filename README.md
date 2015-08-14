@@ -1,5 +1,7 @@
 # crosstab [![NPM version][npm-img]][npm-url] [![Build Status][travis-img]][travis-url]
 
+[![Join the chat at https://gitter.im/tejacques/crosstab](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/tejacques/crosstab?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A utility library for cross-tab communication using localStorage.
 
 [![Sauce Labs Test Status][saucelabs-img]][saucelabs-url]
