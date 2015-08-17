@@ -93,7 +93,7 @@
     util.forEachObj = function (obj, fn) {
         for (var key in obj) {
             if (obj.hasOwnProperty(key)) {
-                fn.call(obj, obj[key], key);
+                fn.call(obj, obj[key], key, obj);
             }
         }
     };
@@ -115,8 +115,8 @@
 
     util.map = function (thing, fn) {
         var res = [];
-        util.forEach(thing, function (item) {
-            res.push(fn(item));
+        util.forEach(thing, function (item, key, obj) {
+            res.push(fn(item, key, obj));
         });
 
         return res;
@@ -143,6 +143,21 @@
         return res;
     };
 
+    util.reduce = function (thing, fn, accumulator) {
+        var first = arguments.length < 3;
+
+        util.forEach(thing, function (item, key, obj) {
+            if (first) {
+                accumulator = item;
+                first = false;
+            } else {
+                accumulator = fn(accumulator, item, key, obj);
+            }
+        });
+
+        return accumulator;
+    };
+
     util.now = function () {
         return (new Date()).getTime();
     };
@@ -156,6 +171,11 @@
         tabClosed: 'tabClosed',
         tabPromoted: 'tabPromoted'
     };
+
+    util.storageEventKeys = util.reduce(util.keys, function (keys, val) {
+        keys[val] = 1;
+        return keys;
+    }, {});
 
     // --- Events ---
     // node.js style events, with the main difference being able
@@ -324,6 +344,11 @@
     var lastNewValue;
     var lastOldValue;
     function onStorageEvent(event) {
+        // Only handle crosstab events
+        if (!event || !(event.key in util.storageEventKeys)) {
+            return;
+        }
+
         var eventValue;
         var wasSupported = crosstab.supported;
         try {
@@ -331,7 +356,7 @@
         } catch (e) {
             eventValue = {};
         }
-        if (!eventValue.id || eventValue.id === crosstab.id) {
+        if (!eventValue || !eventValue.id || eventValue.id === crosstab.id) {
             // This is to force IE to behave properly
             return;
         }
