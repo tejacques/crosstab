@@ -76,8 +76,6 @@
         }
     };
 
-    var toString = Object.prototype.toString;
-
     util.isArray = Array.isArray || function (arr) {
         return arr instanceof Array;
     };
