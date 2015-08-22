@@ -403,7 +403,7 @@
             var message = eventValue.data;
             // only handle if this message was meant for this tab.
             if (!message.destination || message.destination === crosstab.id) {
-                eventHandler.emit(message.event, message);
+                emitMessage(message);
             }
         } else if (event.key === util.keys.FROZEN_TAB_ENVIRONMENT) {
             frozenTabEnvironment = eventValue.data;
@@ -577,9 +577,29 @@
     });
 
     // --- Setup message sending and handling ---
-    function broadcast(event, data, destination) {
+    function makeReplyFn(message) {
+        return function(data) {
+            broadcast('reply-'+message.id, data, message.origin);
+        };
+    }
+
+    function emitMessage(message) {
+        eventHandler.emit(message.event, message, makeReplyFn(message));
+    }
+
+    function broadcast(event, data, destination, callback, timeout) {
         if (!crosstab.supported) {
             notSupported();
+        }
+
+        // Handle parameter overloads
+        if (arguments.length === 1 && typeof (event) == 'object') {
+            var args = event;
+            event = args.event;
+            data = data || args.data;
+            destination = destination || args.destination;
+            callback = callback || args.callback;
+            timeout = timeout || args.timeout;
         }
 
         var message = {
@@ -591,6 +611,20 @@
             timestamp: util.now()
         };
 
+        if (timeout > 0) {
+            message.timeout = timeout;
+        }
+
+        if (callback) {
+            crosstab.once('reply-'+message.id, callback);
+
+            if(timeout > 0) {
+                setTimeout(function() {
+                    callback(null, 'timeout');
+                }, timeout);
+            }
+        }
+
         // If the destination differs from the origin send it out, otherwise
         // handle it locally
         if (crosstab.supported && message.destination !== message.origin) {
@@ -598,12 +632,12 @@
         }
 
         if (!message.destination || message.destination === message.origin) {
-            eventHandler.emit(event, message);
+            emitMessage(message);
         }
     }
 
-    function broadcastMaster(event, data) {
-        broadcast(event, data, getMaster().id);
+    function broadcastMaster(event, data, callback, timeout) {
+        broadcast(event, data, getMaster().id, callback, timeout);
     }
 
     // ---- Return ----
@@ -612,7 +646,10 @@
         setupComplete = true;
     });
 
-    var crosstab = function (fn) {
+    var crosstab = function (arg) {
+        var fn = typeof (arg) == 'function' ? arg : function() {
+            crosstab.broadcast(arg);
+        };
         if (setupComplete) {
             fn();
         } else {
@@ -638,10 +675,22 @@
                 return;
             }
 
-            listener(message);
+            listener.apply(null, arguments);
         };
 
         return crosstab.on(event, directListener, key);
+    };
+    crosstab.onMaster = function (event, listener, key) {
+        var masterListener = function (message) {
+            // only handle messages from master
+            if (message.origin !== getMasterId()) {
+                return;
+            }
+
+            listener.apply(null, arguments);
+        };
+
+        return crosstab.on(event, masterListener, key);
     };
 
     // 10 minute timeout
