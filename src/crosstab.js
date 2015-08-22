@@ -79,7 +79,7 @@
         }
         supportLogged = true;
         var err = new Error(errorMsg);
-        
+
         setTimeout(function() {
            throw err;
         });
@@ -194,7 +194,7 @@
         keys[val] = 1;
         return keys;
     }, {});
-    
+
     util.pad = function(num, width, padChar) {
         padChar = padChar || '0';
         var numStr = (num.toString());
@@ -419,7 +419,7 @@
         if (!crosstab.supported) {
             return;
         }
-        
+
         var storageItem = {
             id: crosstab.id,
             data: data,
