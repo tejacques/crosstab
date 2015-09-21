@@ -18,6 +18,7 @@
         <div id="ie-version"></div>
         <!--[if IE 8]>
             <script>
+               window.ie8 = true;
                document.getElementById("ie-version").innerText = "Internet Explorer 8";
             </script>
         <![endif]-->
@@ -74,7 +75,13 @@
                                 testResult.stack = err.stack;
                             }
 
-                            tests.push(testResult);
+                            if (window.ie8) {
+                                setTimeout(function() {
+                                    tests.push(testResult);
+                                }, 60000);
+                            } else {
+                                tests.push(testResult);
+                            }
                         };
                     };
 
