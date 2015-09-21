@@ -85,6 +85,45 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-saucelabs');
 
     grunt.registerTask('default', ['connect', 'watch']);
+
+    var SauceTunnel = require('sauce-tunnel');
+    var tunnel = new SauceTunnel(
+        process.env.SAUCE_USERNAME,
+        process.env.SAUCE_ACCESS_KEY);
+    grunt.registerTask('open-tunnel', function() {
+        var done = this.async();
+        tunnel.start(function(status) {
+            if (status) {
+                console.log("Tunnel started successfully");
+            } else {
+                console.log("Failed to start tunnel successfully");
+                process.exit(1);
+            }
+            done();
+        });
+    });
+    function closeTunnel(onExit) {
+        console.log("Closing tunnel");
+        tunnel.stop(function () {
+            console.log("Tunnel closed");
+            onExit();
+        });
+    }
+    grunt.registerTask('close-tunnel', function() {
+        var done = this.async();
+        closeTunnel(done);
+    });
+    grunt.registerTask('wait-tunnel', function() {
+        var done = this.async();
+        ['SIGINT', 'SIGHUP', 'SIGQUIT', 'SIGABRT', 'SIGTERM'].forEach(function(signal) {
+            process.on(signal, function() {
+                done();
+            });
+        });
+    });
+    grunt.registerTask('tunnel', function() {
+        grunt.task.run('open-tunnel', 'connect', 'wait-tunnel', 'close-tunnel');
+    });
     grunt.registerTask('test', 'Run tests', function (type, testType, multiple) {
         if(!type) {
             grunt.task.run(['connect', 'mocha_phantomjs']);
@@ -94,7 +133,12 @@ module.exports = function (grunt) {
             if (type === 'ci') {
                 gruntConfig['saucelabs-mocha'][type].options.statusCheckAttempts = 600;
                 gruntConfig['saucelabs-mocha'][type].options['max-duration'] = 600;
-                grunt.task.run(['connect', 'mocha_phantomjs', 'saucelabs-mocha:' + type]);
+                grunt.task.run([
+                    'connect',
+                    'mocha_phantomjs',
+                    'open-tunnel',
+                    'saucelabs-mocha:' + type,
+                ]);
             } else {
                 multiple = parseInt(multiple);
                 if (multiple > 0) {

@@ -15,6 +15,12 @@
         <![endif]-->
     </head>
     <body>
+        <div id="ie-version"></div>
+        <!--[if IE 8]>
+            <script>
+               document.getElementById("ie-version").innerText = "Internet Explorer 8";
+            </script>
+        <![endif]-->
         <div id="mocha"></div>
         <script src="../node_modules/mocha/mocha.js"></script>
         <script src="../node_modules/expect.js/index.js"></script>
