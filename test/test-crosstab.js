@@ -97,6 +97,21 @@ var removeIframe = function (iframe) {
 
 // =========== Tests ==============
 
+describe('requirements', function() {
+
+    it('should have addEventListener defined', function() {
+        expect(typeof(addEventListener)).to.not.be('undefined');
+    });
+
+    it('should have localStorage defined', function() {
+        expect(typeof(localStorage)).to.not.be('undefined');
+    });
+
+    it('should have JSON defined', function() {
+        expect(typeof(JSON)).to.not.be('undefined');
+    });
+});
+
 describe('crosstab', function () {
 
     it('should be a function', function () {
