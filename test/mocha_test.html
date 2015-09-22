@@ -47,7 +47,15 @@
                         var results = runner.stats;
                         results.reports = failedTests;
                         results.tests = allTests;
-                        window.mochaResults = results;
+
+                        if (window.ie8) {
+                            setTimeout(function() {
+                                window.mochaResults = results;
+                            }, 60000);
+                        } else {
+                            window.mochaResults = results;
+                        }
+                        
                     });
 
                     var logTest = function (result, tests) {
@@ -75,13 +83,7 @@
                                 testResult.stack = err.stack;
                             }
 
-                            if (window.ie8) {
-                                setTimeout(function() {
-                                    tests.push(testResult);
-                                }, 60000);
-                            } else {
-                                tests.push(testResult);
-                            }
+                            tests.push(testResult);
                         };
                     };
 
