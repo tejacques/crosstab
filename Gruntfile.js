@@ -136,7 +136,7 @@ module.exports = function (grunt) {
                 grunt.task.run([
                     'connect',
                     'mocha_phantomjs',
-                    'saucelabs-mocha:' + type,
+                    'saucelabs-mocha:' + type
                 ]);
             } else {
                 multiple = parseInt(multiple);
