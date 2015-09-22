@@ -136,7 +136,6 @@ module.exports = function (grunt) {
                 grunt.task.run([
                     'connect',
                     'mocha_phantomjs',
-                    'open-tunnel',
                     'saucelabs-mocha:' + type,
                 ]);
             } else {
