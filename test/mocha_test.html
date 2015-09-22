@@ -8,20 +8,13 @@
         </script>
         <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
         <!--[if IE 8]>
-            <script src="../node_modules/IE8-EventListener/src/storage/util.js"></script>
-            <script src="../node_modules/IE8-EventListener/src/storage.js"></script>
-            <script src="../node_modules/IE8-EventListener/src/ie8-eventlistener.js"></script>
+            <script src="../node_modules/ie8-eventListener/src/storage/util.js"></script>
+            <script src="../node_modules/ie8-eventListener/src/storage.js"></script>
+            <script src="../node_modules/ie8-eventListener/src/ie8-eventlistener.js"></script>
             <script src="../node_modules/es5-shim/es5-shim.js"></script>
         <![endif]-->
     </head>
     <body>
-        <div id="ie-version"></div>
-        <!--[if IE 8]>
-            <script>
-               window.ie8 = true;
-               document.getElementById("ie-version").innerText = "Internet Explorer 8";
-            </script>
-        <![endif]-->
         <div id="mocha"></div>
         <script src="../node_modules/mocha/mocha.js"></script>
         <script src="../node_modules/expect.js/index.js"></script>
@@ -48,13 +41,7 @@
                         results.reports = failedTests;
                         results.tests = allTests;
 
-                        if (window.ie8) {
-                            setTimeout(function() {
-                                window.mochaResults = results;
-                            }, 60000);
-                        } else {
-                            window.mochaResults = results;
-                        }
+                        window.mochaResults = results;
                         
                     });
 
