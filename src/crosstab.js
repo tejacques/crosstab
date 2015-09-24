@@ -617,7 +617,7 @@
         if (frozenTabsRaw.timestamp) {
             var frozenTabs = frozenTabsRaw.data;
             if (util.now() - frozenTabsRaw.timestamp > CACHE_TIMEOUT) {
-                localStorage.clear(util.keys.FROZEN_TAB_ENVIRONMENT);
+                localStorage.removeItem(util.keys.FROZEN_TAB_ENVIRONMENT);
             } else if (frozenTabs === true) {
                 frozenTabEnvironmentDetected();
             }
@@ -629,7 +629,7 @@
             var supported = supportedRaw.data;
 
             if (util.now() - supportedRaw.timestamp > CACHE_TIMEOUT) {
-                localStorage.clear(util.keys.SUPPORTED_KEY);
+                localStorage.removeItem(util.keys.SUPPORTED_KEY);
             } else if (supported === false || supported === true) {
                 // As long as it is explicitely set, use the value
                 crosstab.supported = supported;
