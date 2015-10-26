@@ -80,7 +80,19 @@ var message = {
 ```
 
 The event will not fire if the destination is present and differs from the id of the current tab.
- 
+
+## Error Handling ##
+
+crosstab can asynchronously error when polling tabs to maintain internal state. To help you handle these errors, crosstab provides support for error handlers.
+
+```js
+crosstab.on('error', function(err){
+	/* handle error */
+});
+```
+
+If no error handler is provided errors will be thrown. If an error handler is provided errors caused by broadcast will be sent to the error handler rather than thrown.
+
 
 Why was it made?
 ----------------
