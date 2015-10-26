@@ -77,7 +77,15 @@
             errorMsg += ': ' + reasons.join(', ');
         }
 
-        throw new Error(errorMsg);
+        // Try to dispatch an error message
+        // and if there are no error message handlers
+        // throw it
+
+        var error = new Error(errorMsg);
+
+        if(!util.events.emit('error', error)){
+            throw error;
+        }
     }
 
     // --- Utility ---
@@ -289,6 +297,8 @@
                     listener.apply(this, args);
                 }
             });
+
+            return handlers.length > 0;
         };
 
         var once = function (event, listener, key) {
@@ -571,7 +581,7 @@
     // --- Setup message sending and handling ---
     function broadcast(event, data, destination) {
         if (!crosstab.supported) {
-            notSupported();
+            return notSupported();
         }
 
         var message = {

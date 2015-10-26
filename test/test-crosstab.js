@@ -232,6 +232,64 @@ describe('crosstab', function () {
         expect(received).to.be(undefined);
     });
 
+    it('should throw if not supported and no error listeners have been registered', function () {
+        crosstab.supported = false;
+        var sentMsg = null;
+        var throwError = null;
+
+        var throwHandler = crosstab.on('throw', function(msg){
+            sentMsg = msg;
+        });
+
+        try{
+            crosstab.broadcast('throw', 'msg');
+        }
+        catch(err){
+            throwError = err;
+        }
+
+        expect(sentMsg).to.be(null);
+        expect(typeof throwError).to.be('object');
+        expect(throwError.message).to.be('crosstab not supported');
+
+        crosstab.off('throw', throwHandler);
+
+        crosstab.supported = true;
+    });
+
+    it('should emit error if not supported and error listeners have been registered', function () {
+        crosstab.supported = false;
+        var sentMsg = null;
+        var thrownError = null;
+        var handledError = null;
+
+        var errorHandler = crosstab.on('error', function(err){
+            handledError = err;
+        });
+
+        var throwHandler = crosstab.on('emit', function(msg){
+            console.log('emit', msg);
+            sentMsg = msg;
+        });
+
+        try{
+            crosstab.broadcast('emit', 'msg');
+        }
+        catch(err){
+            thrownError = err;
+        }
+
+        expect(sentMsg).to.be(null);
+        expect(thrownError).to.be(null);
+        expect(typeof handledError).to.be('object');
+        expect(handledError.message).to.be('crosstab not supported');
+
+        crosstab.off('error', errorHandler);
+        crosstab.off('emit', throwHandler);
+
+        crosstab.supported = true;
+    });
+
     describe('with iframe', function () {
         this.timeout(1000);
         var iframe;
