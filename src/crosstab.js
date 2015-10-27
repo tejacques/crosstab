@@ -494,18 +494,19 @@
     // self if we are the lowest tab id
     eventHandler.addListener(util.eventTypes.tabClosed, function (message) {
         var id = message.data;
-        if (util.tabs[id]) {
+        if (id in util.tabs) {
             delete util.tabs[id];
         }
 
-        if (!getMaster() || getMaster().id === id) {
+        var master = getMaster();
+        if (!master || master.id === id) {
             // If the master was the closed tab, delete it and the highest
             // tab ID becomes the new master, which will save the tabs
-            if (getMaster()) {
+            if (master) {
                 deleteMaster();
             }
             masterTabElection();
-        } else if (getMaster().id === crosstab.id) {
+        } else if (master.id === crosstab.id) {
             // If I am master, save the new tabs out
             setStoredTabs();
         }
@@ -705,9 +706,9 @@
 
         // check to see if setup is complete
         if (!setupComplete) {
-            var masterTab = crosstab.util.tabs[crosstab.util.keys.MASTER_TAB];
+            var master = getMaster();
             // ping master
-            if (masterTab && masterTab.id !== myTab.id) {
+            if (master && master.id !== myTab.id) {
                 var timeout;
                 var start;
 
@@ -751,7 +752,7 @@
                     recursiveTimeout(5);
                 }, PING_TIMEOUT - 5 * iterations);
                 crosstab.broadcastMaster('PING');
-            } else if (masterTab && masterTab.id === myTab.id) {
+            } else if (master && master.id === myTab.id) {
                 util.events.emit('setupComplete');
             }
         }
