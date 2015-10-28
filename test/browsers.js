@@ -33,7 +33,7 @@ var browsers = {
         ['Windows 10', 'internet explorer', '11'],
     ],
     safari: [
-        ['OSX 10.10', 'safari', '8'],
+        ['OSX 10.11', 'safari', '9'],
     ],
     opera: [
         ['Linux', 'opera', '12.15'],
@@ -79,7 +79,7 @@ var browsers = {
         ['OSX 10.8', 'safari', '6'],
         ['OSX 10.9', 'safari', '7'],
         ['OSX 10.10', 'safari', '8'],
-        ['OSX 10.11', 'safari', '8.1'],
+        ['OSX 10.11', 'safari', '9'],
         // Opera
         // Testing Opera 12 is currently broken on sauce labs
         // ['Linux', 'opera', '12.15'],
