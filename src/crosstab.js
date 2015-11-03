@@ -19,6 +19,8 @@
  *  limitations under the License.
  *
  */
+/* global define */
+/* global global */
 ; (function (window, define) { define('crosstab', function (require, exports, module) {
     'use strict';
 
@@ -363,7 +365,6 @@
         }
 
         var eventValue;
-        var wasSupported = crosstab.supported;
         try {
             eventValue = event.newValue ? JSON.parse(event.newValue) : {};
         } catch (e) {
@@ -388,10 +389,8 @@
         } else if (event.key === util.keys.FROZEN_TAB_ENVIRONMENT) {
             frozenTabEnvironment = eventValue.data;
             crosstab.supported = crosstab.supported && !eventValue.data;
-            //if (wasSupported) notSupported();
         } else if (event.key === util.keys.SUPPORTED_KEY) {
             crosstab.supported = crosstab.supported && eventValue.data;
-            //if(wasSupported) notSupported();
         }
     }
 
@@ -534,16 +533,23 @@
         var id = message.data;
         var lastUpdated = message.timestamp;
         var previousMaster = getMasterId();
+
+        // Bully out competing broadcasts if our id is lower
+        if (crosstab.id < id) {
+            return broadcast(util.eventTypes.tabPromoted, crosstab.id);
+        }
+
         setMaster({
             id: id,
             lastUpdated: lastUpdated
         });
 
-        if (isMaster()
-            && previousMaster !== crosstab.id) {
+        if (isMaster()) {
             // set the tabs in localStorage
             setStoredTabs();
-
+        }
+        if (isMaster()
+            && previousMaster !== crosstab.id) {
             // emit the become master event so we can handle it accordingly
             util.events.emit(util.eventTypes.becomeMaster);
         } else if (!isMaster()
