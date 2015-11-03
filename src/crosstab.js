@@ -536,6 +536,7 @@
 
         // Bully out competing broadcasts if our id is lower
         if (crosstab.id < id) {
+            console.log("previousMaster: ", previousMaster, "id: ", id, " crosstab.id: ", crosstab.id, " crosstab.id < id: ", crosstab.id < id);
             return broadcast(util.eventTypes.tabPromoted, crosstab.id);
         }
 
@@ -551,6 +552,7 @@
         if (isMaster()
             && previousMaster !== crosstab.id) {
             // emit the become master event so we can handle it accordingly
+            console.log("previousMaster: ", previousMaster, "id: ", crosstab.id, " newMaster < previousMaster: ", crosstab.id < previousMaster);
             util.events.emit(util.eventTypes.becomeMaster);
         } else if (!isMaster()
             && previousMaster === crosstab.id) {

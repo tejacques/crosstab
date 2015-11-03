@@ -134,6 +134,7 @@ describe('crosstab', function () {
         crosstab(function() {
             var throwErr = function(message) {
                 return function() {
+                    console.log(message);
                     throw new Error(message);
                 };
             };
@@ -147,14 +148,21 @@ describe('crosstab', function () {
             expect(getMaster().id === crosstab.id);
             crosstab.on(crosstab.util.eventTypes.demoteFromMaster, throwDemotedErr);
             crosstab.on(crosstab.util.eventTypes.becomeMaster, throwBecomeMasterErr);
-            crosstab.once(crosstab.util.eventTypes.tabPromoted, function() {
-                setTimeout(function() {
+
+            var received = 0;
+            function onTabPromoted(message) {
+                console.log("Promoted: ", message.data, " Current: ", crosstab.id);
+                expect(getMaster().id === crosstab.id);
+                received++;
+                if((++received)===2) {
                     crosstab.off(crosstab.util.eventTypes.demoteFromMaster, throwDemotedErr);
                     crosstab.off(crosstab.util.eventTypes.becomeMaster, throwBecomeMasterErr);
-                    expect(getMaster().id === crosstab.id);
+                    crosstab.off(crosstab.util.eventTypes.tabPromoted, onTabPromoted);
                     done();
-                }, 10);
-            });
+                }
+            }
+
+            crosstab.on(crosstab.util.eventTypes.tabPromoted, onTabPromoted);
 
             crosstab.broadcast(crosstab.util.eventTypes.tabPromoted, crosstab.util.generateId());
         });
@@ -359,12 +367,14 @@ describe('crosstab', function () {
             iframe.run(function () {
                 crosstab(function() {
                     var promoted = false;
-                    var demoted = false;
                     var onPromoted = function() {
                         promoted = true;
+                        window.parent.expect(getMaster().id === crosstab.id);
                     };
                     var onDemoted = function() {
-                        demoted = true;
+                        window.parent.expect(promoted).to.be(true);
+                        window.parent.expect(getMaster().id !== crosstab.id);
+                        window.parent.callback();
                     };
 
                     function getMaster() {
@@ -372,17 +382,8 @@ describe('crosstab', function () {
                     }
 
                     window.parent.expect(getMaster().id !== crosstab.id);
-                    crosstab.once(crosstab.util.eventTypes.demoteFromMaster, onPromoted);
-                    crosstab.once(crosstab.util.eventTypes.becomeMaster, onDemoted);
-                    crosstab.once(crosstab.util.eventTypes.tabPromoted, function() {
-                        setTimeout(function() {
-                            window.parent.expect(promoted).to.be(true);
-                            window.parent.expect(demoted).to.be(true);
-                            window.parent.expect(getMaster().id !== crosstab.id);
-                            window.parent.callback();
-                        }, 10);
-                    });
-
+                    crosstab.once(crosstab.util.eventTypes.becomeMaster, onPromoted);
+                    crosstab.once(crosstab.util.eventTypes.demoteFromMaster, onDemoted);
                     crosstab.broadcast(crosstab.util.eventTypes.tabPromoted, crosstab.id);
                 });
             });
