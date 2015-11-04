@@ -134,7 +134,6 @@ describe('crosstab', function () {
         crosstab(function() {
             var throwErr = function(message) {
                 return function() {
-                    console.log(message);
                     throw new Error(message);
                 };
             };
@@ -149,12 +148,9 @@ describe('crosstab', function () {
             crosstab.on(crosstab.util.eventTypes.demoteFromMaster, throwDemotedErr);
             crosstab.on(crosstab.util.eventTypes.becomeMaster, throwBecomeMasterErr);
 
-            var received = 0;
             function onTabPromoted(message) {
-                console.log("Promoted: ", message.data, " Current: ", crosstab.id);
                 expect(getMaster().id === crosstab.id);
-                received++;
-                if((++received)===2) {
+                if(message.data === crosstab.id) {
                     crosstab.off(crosstab.util.eventTypes.demoteFromMaster, throwDemotedErr);
                     crosstab.off(crosstab.util.eventTypes.becomeMaster, throwBecomeMasterErr);
                     crosstab.off(crosstab.util.eventTypes.tabPromoted, onTabPromoted);
@@ -359,7 +355,7 @@ describe('crosstab', function () {
             });
         });
 
-        it('should be bullied by other tabs out of master when it has a higher ID', function (done) {
+        it('should be bullied out of master when it has a higher ID', function (done) {
             window.callback = function () {
                 done();
             };
