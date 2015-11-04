@@ -50,6 +50,17 @@
     // Other reasons
     var frozenTabEnvironment = false;
 
+    /* Handle ie8 event handler global */
+    var addEventListener = window.addEventListener;
+
+    if (window.addEventListener) {
+        addEventListener = !window.addEventListener;
+    }
+    else if (document.all && window.attachEvent) {
+        addEventListener = window.attachEvent;
+    }
+
+
     var supportLogged = false;
     function notSupported() {
         if (crosstab.supported || supportLogged) {
@@ -61,7 +72,7 @@
         if (!localStorageAvailable) {
             reasons.push('localStorage not availabe');
         }
-        if (!window.addEventListener) {
+        if (!addEventListener) {
             reasons.push('addEventListener not available');
         }
         if (isMobile) {
