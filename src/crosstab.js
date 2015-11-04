@@ -477,7 +477,7 @@
     function swapUnloadEvents() {
         // `beforeunload` replaced by `unload` (IE11 will be smart now)
         window.removeEventListener('beforeunload', unload, false);
-        window.addEventListener('unload', unload, false);
+        addEventListener('unload', unload, false);
         restoreLoop();
     }
 
@@ -670,7 +670,7 @@
 
     crosstab.id = util.generateId();
     crosstab.supported = localStorageAvailable
-        && window.addEventListener
+        && addEventListener
         && !isMobile
         && setItemAllowed;
     crosstab.util = util;
@@ -846,13 +846,13 @@
         }
     }
 
-    if (window.addEventListener) {
+    if (addEventListener) {
         // ---- Setup Storage Listener
-        window.addEventListener('storage', onStorageEvent, false);
+        addEventListener('storage', onStorageEvent, false);
         // start with the `beforeunload` event due to IE11
-        window.addEventListener('beforeunload', unload, false);
+        addEventListener('beforeunload', unload, false);
         // swap `beforeunload` to `unload` after DOM is loaded
-        window.addEventListener('DOMContentLoaded', swapUnloadEvents, false);
+        addEventListener('DOMContentLoaded', swapUnloadEvents, false);
     }
 
     crosstab.onDirect('PING', function (message) {
