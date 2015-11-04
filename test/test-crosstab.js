@@ -1,3 +1,8 @@
+/* global beforeEach */
+/* global crosstab */
+/* global describe */
+/* global expect */
+/* global it */
 // =========== Iframe Tools ==============
 
 var runInIframe = function (iframe, fn) {
@@ -31,7 +36,7 @@ var runIframe = function (onload) {
     allArgs.push.apply(allArgs, args);
     //iframe.style.display = 'none';
     iframe.style.border = 'none';
-    iframe.id = (Math.random() * 0xFFFFFFFF) | 0;
+    iframe.id = crosstab.util.generateId();
     iframe.src = "/test/iframe.html";
 
     iframe.onloadqueue = [];
@@ -47,7 +52,7 @@ var runIframe = function (onload) {
     };
     iframe.onloadqueue.push(onload);
 
-    crosstabOnload = function () {
+    var crosstabOnload = function () {
         for (var i = 0; i < iframe.onloadqueue.length; i++) {
             var fn = iframe.onloadqueue[i];
             iframe.run(fn);
@@ -67,7 +72,7 @@ var runIframe = function (onload) {
                 document.body.appendChild(div);
             };
 
-            addText('iframe loaded');
+            window.addText('iframe loaded');
         });
         var crosstabScript = document.createElement('script');
         crosstabScript.type = 'text/javascript';
@@ -125,6 +130,40 @@ describe('crosstab', function () {
         });
     });
 
+    it('should bully other tabs out of master when it has a lower ID', function (done) {
+        crosstab(function() {
+            var throwErr = function(message) {
+                return function() {
+                    throw new Error(message);
+                };
+            };
+            var throwDemotedErr = throwErr('tab was demoted');
+            var throwBecomeMasterErr = throwErr('tab was promoted');
+
+            function getMaster() {
+                return crosstab.util.tabs[crosstab.util.keys.MASTER_TAB];
+            }
+
+            expect(getMaster().id === crosstab.id);
+            crosstab.on(crosstab.util.eventTypes.demoteFromMaster, throwDemotedErr);
+            crosstab.on(crosstab.util.eventTypes.becomeMaster, throwBecomeMasterErr);
+
+            function onTabPromoted(message) {
+                expect(getMaster().id === crosstab.id);
+                if(message.data === crosstab.id) {
+                    crosstab.off(crosstab.util.eventTypes.demoteFromMaster, throwDemotedErr);
+                    crosstab.off(crosstab.util.eventTypes.becomeMaster, throwBecomeMasterErr);
+                    crosstab.off(crosstab.util.eventTypes.tabPromoted, onTabPromoted);
+                    done();
+                }
+            }
+
+            crosstab.on(crosstab.util.eventTypes.tabPromoted, onTabPromoted);
+
+            crosstab.broadcast(crosstab.util.eventTypes.tabPromoted, crosstab.util.generateId());
+        });
+    });
+
     it('should receive broadcast when sent', function () {
         var msg = "TestMessage";
         var received;
@@ -141,25 +180,23 @@ describe('crosstab', function () {
 
         // http://stackoverflow.com/questions/280713/elements-order-in-a-for-in-loop
         crosstab.on('test', function(message) {
-            expect((message || {}).data).to.be(msg);
-            order.push(2);
+            order.push(0);
         }, 'second');
         crosstab.on('test', function(message) {
-            order.push(3);
+            order.push(1);
         }, '3');
         crosstab.on('test', function(message) {
-            order.push(1);
+            order.push(2);
         }, 'first');
         crosstab.on('test', function(message) {
-            expect((message || {}).data).to.be(msg);
-            order.push(101);
+            order.push(3);
         });
         crosstab.on('test', function(message) {
-            order.push(102);
+            order.push(4);
         });
 
         crosstab.broadcast('test', msg);
-        expect(order).to.eql([2, 3, 1, 101, 102]);
+        expect(order).to.eql([0, 1, 2, 3, 4]);
     });
 
     it('should not invoke event listener after unsubscribing', function() {
@@ -241,13 +278,13 @@ describe('crosstab', function () {
             window.done = done;
             iframe = runIframe(function () {
                 crosstab(function () {
-                    addText('crosstab setup complete');
+                    window.addText('crosstab setup complete');
                 });
                 window.parent.done();
             });
         });
 
-        afterEach(function () {
+        window.afterEach(function () {
             //removeIframe(iframe);
         });
 
@@ -309,11 +346,41 @@ describe('crosstab', function () {
                 crosstab(function () {
                     window.parent.setTimeout(window.parent.callback);
                     crosstab.on('iframeBroadcastTestStart', function () {
-                        addText('starting broadcast test in iframe');
+                        window.addText('starting broadcast test in iframe');
                         crosstab.broadcast('iframeBroadcastTest');
                     });
-                    addText('telling iframe to start test');
+                    window.addText('telling iframe to start test');
                     window.top.crosstab.broadcast('iframeBroadcastTestStart');
+                });
+            });
+        });
+
+        it('should be bullied out of master when it has a higher ID', function (done) {
+            window.callback = function () {
+                done();
+            };
+
+            iframe.run(function () {
+                crosstab(function() {
+                    var promoted = false;
+                    var onPromoted = function() {
+                        promoted = true;
+                        window.parent.expect(getMaster().id === crosstab.id);
+                    };
+                    var onDemoted = function() {
+                        window.parent.expect(promoted).to.be(true);
+                        window.parent.expect(getMaster().id !== crosstab.id);
+                        window.parent.callback();
+                    };
+
+                    function getMaster() {
+                        return crosstab.util.tabs[crosstab.util.keys.MASTER_TAB];
+                    }
+
+                    window.parent.expect(getMaster().id !== crosstab.id);
+                    crosstab.once(crosstab.util.eventTypes.becomeMaster, onPromoted);
+                    crosstab.once(crosstab.util.eventTypes.demoteFromMaster, onDemoted);
+                    crosstab.broadcast(crosstab.util.eventTypes.tabPromoted, crosstab.id);
                 });
             });
         });

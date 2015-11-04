@@ -58,7 +58,6 @@ module.exports = function (grunt) {
         }
     };
 
-    var onTestComplete;
     for (var browser in browsers) {
         var taskBrowsers = browsers[browser];
         var tags = [];

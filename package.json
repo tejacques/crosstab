@@ -27,6 +27,7 @@
     "grunt-mocha-phantomjs": "=0.6.1",
     "grunt-saucelabs": "~8.6.0",
     "ie8-eventlistener": "^0.1.1",
+    "jshint": "^2.8.0",
     "mocha": "^2.1.0",
     "mocha-phantomjs": "=3.5.3",
     "phantomjs": "~1.9.1",
