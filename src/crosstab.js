@@ -51,10 +51,10 @@
     var frozenTabEnvironment = false;
 
     /* Handle ie8 event handler global */
-    var addEventListener = window.addEventListener;
+    var addEventListener = null;
 
     if (window.addEventListener) {
-        addEventListener = !window.addEventListener;
+        addEventListener = window.addEventListener;
     }
     else if (document.all && window.attachEvent) {
         addEventListener = window.attachEvent;
