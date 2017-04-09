@@ -314,6 +314,7 @@
         };
 
         var destructor = function() {
+            clearInterval(crosstab.keepAliveInterval)
             removeAllListeners();
         };
 
@@ -799,7 +800,7 @@
             }
         });
 
-        setInterval(keepaliveLoop, TAB_KEEPALIVE);
+        crosstab.keepAliveInterval = setInterval(keepaliveLoop, TAB_KEEPALIVE);
         keepaliveLoop();
     }
 
